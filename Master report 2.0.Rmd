@@ -1,0 +1,4906 @@
+---
+title: "Investigating Physiological Changes Induced By Fasting and Refeeding In Humans (FastForward Study)"
+author: "Megat Nabil Jamaludin bin Megat Faizal"
+date: "2026-02-22"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    theme: flatly
+---
+
+```{r setup, include=FALSE}
+options(encoding = "UTF-8")
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 18,
+  fig.height = 12
+)
+
+## =========================
+## PACKAGES
+## =========================
+library(tidyverse)   
+library(lme4)
+library(lmerTest)
+library(emmeans)
+library(broom)
+library(broom.mixed)
+library(kableExtra)
+library(knitr)
+library(readxl)
+library(e1071)
+library(car)
+library(purrr)
+
+## =========================
+## HELPERS
+## =========================
+first_non_na <- function(x) {
+  y <- x[!is.na(x)]
+  if (length(y) == 0) NA else y[1]
+}
+
+center <- function(x) x - mean(x, na.rm = TRUE) #used for centring 
+
+p_stars <- function(p) {
+  case_when(
+    is.na(p)        ~ "",
+    p < 0.001       ~ "☆☆☆",
+    p < 0.01        ~ "☆☆",
+    p < 0.05        ~ "☆",
+    TRUE            ~ ""
+  )
+}
+
+fmt_p <- function(p) {
+  ifelse(is.na(p), NA_character_, format.pval(p, digits = 2, eps = 1e-300))
+}
+
+make_bmi_cat <- function(bmi) {
+  case_when(
+    is.na(bmi) ~ NA_character_, #dont drop them, helps with structure checks later on 
+    bmi < 25 ~ "Normal",
+    bmi < 30 ~ "Overweight",
+    TRUE ~ "Obese"
+  )
+}
+
+# same as displaying 1st - 99th percentiles just with some fancy name
+winsorize <- function(x, probs = c(0.01, 0.99)) {
+  qs <- quantile(x, probs = probs, na.rm = TRUE, type = 7)
+  pmin(pmax(x, qs[1]), qs[2])
+}
+
+## =========================
+## PARAMETERS (KEEP ONLY ONCE)
+## =========================
+lab_vars <- c(
+  "Red Blood Cells (Mio/µl)",
+  "Basophils abs. (Tsd./µl)",
+  "Eosinophils abs. (Tsd./µl)",
+  "Immature Granulocytes abs. (Tsd./µl)",
+  "White Blood Cells (Tsd./µl)",
+  "Lymphocytes abs. (Tsd./µl)",
+  "Monocytes abs. (Tsd./µl)",
+  "Neutrophils abs. (Tsd./µl)",
+  "Platelets (Tsd./µl)",
+  "ESR (mm/h)",
+  "CRP (mg/l)",
+  "RDW (%)",
+  "Hemoglobin (g/dl)",
+  "Hematocrit (%)",
+  "Alkaline Phosphatase (U/l)",
+  "Ferritin (µg/l)",
+  "Serum Glucose (mg/dl)",
+  "Insulin (mIU/l)",
+  "GPT/ALT (U/l)",
+  "GOT/AST (U/l)",
+  "Gamma-GT (U/l)",
+  "GFR (ml/min)",
+  "Uric Acid (mg/dl)",
+  "PDW (fl)",
+  "P-LCR (%)",
+  "MCH (pg)",
+  "MCHC (g/dl)",
+  "MCV (fl)",
+  "Monocytes (%)",
+  "Neutrophils (%)",
+  "Basophils (%)",
+  "Eosinophils (%)",
+  "Lymphocytes (%)",
+  "Immature Granulocytes (%)",
+  "Total Cholesterol (mg/dl)",
+  "Triglycerides (mg/dl)",
+  "HDL-C (mg/dl)",
+  "Non-HDL Cholesterol (mg/dl)",
+  "LDL-C (mg/dl)",
+  "LDL/HDL Ratio (ratio)",
+  "TG/HDL Ratio"
+)
+
+markers_lm <- c(
+  "Basophils abs. (Tsd./µl)",
+  "Eosinophils abs. (Tsd./µl)",
+  "Immature Granulocytes abs. (Tsd./µl)",
+  "White Blood Cells (Tsd./µl)",
+  "Lymphocytes abs. (Tsd./µl)",
+  "Monocytes abs. (Tsd./µl)",
+  "Neutrophils abs. (Tsd./µl)",
+  "Platelets (Tsd./µl)",
+  "ESR (mm/h)",
+  "CRP (mg/l)",
+  "Ferritin (µg/l)",
+  "Serum Glucose (mg/dl)",
+  "Insulin (mIU/l)",
+  "GFR (ml/min)",
+  "Uric Acid (mg/dl)",
+  "Total Cholesterol (mg/dl)",
+  "Triglycerides (mg/dl)",
+  "HDL-C (mg/dl)",
+  "Non-HDL Cholesterol (mg/dl)",
+  "LDL-C (mg/dl)",
+  "LDL/HDL Ratio (ratio)",
+  "TG/HDL Ratio",
+  "GPT/ALT (U/l)",
+  "GOT/AST (U/l)",
+  "Gamma-GT (U/l)",
+  "Alkaline Phosphatase (U/l)"
+)
+
+## =========================
+## PARAMETERS (GROUPED)
+## =========================
+immune_absolute_vars <- c(
+  "White Blood Cells (Tsd./µl)†",
+  "Neutrophils abs. (Tsd./µl)†",
+  "Lymphocytes abs. (Tsd./µl)†",
+  "Monocytes abs. (Tsd./µl)†",
+  "Eosinophils abs. (Tsd./µl)†",
+  "Basophils abs. (Tsd./µl)†",
+  "Immature Granulocytes abs. (Tsd./µl)†",
+  "Platelets (Tsd./µl)†"
+)
+
+immune_percentage_vars <- c(
+  "Neutrophils (%)",
+  "Lymphocytes (%)",
+  "Monocytes (%)",
+  "Eosinophils (%)",
+  "Basophils (%)",
+  "Immature Granulocytes (%)"
+)
+
+inflammatory_vars <- c(
+  "CRP (mg/l)†",
+  "ESR (mm/h)†",
+  "Ferritin (µg/l)†"
+)
+
+lipid_vars <- c(
+  "Total Cholesterol (mg/dl)",
+  "LDL-C (mg/dl)",
+  "HDL-C (mg/dl)",
+  "Non-HDL Cholesterol (mg/dl)",
+  "Triglycerides (mg/dl)†"
+)
+
+metabolic_vars <- c(
+  "Serum Glucose (mg/dl)",
+  "Insulin (mIU/l)†",
+  "GPT/ALT (U/l)†",
+  "GOT/AST (U/l)†",
+  "Gamma-GT (U/l)",
+  "Alkaline Phosphatase (U/l)",
+  "GFR (ml/min)",
+  "Uric Acid (mg/dl)"
+)
+
+hematology_vars <- c(
+  "Red Blood Cells (Mio/µl)",
+  "Hemoglobin (g/dl)",
+  "Hematocrit (%)",
+  "RDW (%)",
+  "MCH (pg)",
+  "MCHC (g/dl)",
+  "MCV (fl)",
+  "PDW (fl)",
+  "P-LCR (%)"
+)
+
+index_vars_needed <- c(
+  "Neutrophils abs. (Tsd./µl)",
+  "Lymphocytes abs. (Tsd./µl)",
+  "Monocytes abs. (Tsd./µl)",
+  "Platelets (Tsd./µl)"
+)
+
+## =========================
+## PARAMETERS ANALYSIS
+## =========================
+percent_vars <- lab_vars[grepl("%", lab_vars)]
+
+delta_vars <- c(
+  "Red Blood Cells (Mio/µl)",
+  "Basophils abs. (Tsd./µl)",
+  "Eosinophils abs. (Tsd./µl)",
+  "Immature Granulocytes abs. (Tsd./µl)",
+  "White Blood Cells (Tsd./µl)",
+  "Lymphocytes abs. (Tsd./µl)",
+  "Monocytes abs. (Tsd./µl)",
+  "Neutrophils abs. (Tsd./µl)",
+  "Platelets (Tsd./µl)",
+  "ESR (mm/h)",
+  "CRP (mg/l)",
+  "Ferritin (µg/l)",
+  "Serum Glucose (mg/dl)",
+  "Insulin (mIU/l)",
+  "GPT/ALT (U/l)",
+  "GOT/AST (U/l)",
+  "Gamma-GT (U/l)",
+  "GFR (ml/min)",
+  "Uric Acid (mg/dl)",
+  "Alkaline Phosphatase (U/l)",
+  "Total Cholesterol (mg/dl)",
+  "Triglycerides (mg/dl)",
+  "HDL-C (mg/dl)",
+  "Non-HDL Cholesterol (mg/dl)",
+  "LDL-C (mg/dl)",
+  "TG/HDL Ratio",
+  "Hemoglobin (g/dl)",
+  "MCH (pg)",
+  "MCHC (g/dl)",
+  "MCV (fl)",
+  "PDW (fl)"
+)
+
+## =========================
+## READ RAW DATA   
+## =========================
+FF_laboratory_raw <- read_csv2(   
+  "FF_laboratory_ETL2.csv",
+  locale = locale(encoding = "ISO-8859-1")
+)
+
+FF_fasting <- read_csv("FF_fasting_duration_and_FR_duration.csv") %>%
+  mutate(study_id = as.character(study_id))
+
+FF_metadata <- read_excel("C:/Users/megbi/Desktop/BA/Cohort descriptions/FF_metadata_0402026.xlsx") %>%
+  select(-sex) %>%
+  mutate(study_id = as.character(study_id))
+
+FF_diet <- read_csv("FF_dietary_data_28-11-2025.csv") %>%
+  mutate(study_id = as.character(study_id))
+
+## =========================
+## CLEAN / STANDARDIZE CORE LABS      
+## =========================
+FF_laboratory <- FF_laboratory_raw %>%
+  select(-lab_id, -case_id, -range_values, -birthdate) %>%
+  mutate(
+    datetime = as.Date(datetime, format = "%d.%m.%Y"),
+    study_id = as.character(study_id),
+    variable = ifelse(variable == "High-Sensitivity CRP (mg/l)", "CRP (mg/l)", variable), 
+    value = case_when(
+      variable == "CRP (mg/l)" & str_detect(value, "<0\\.5") ~ as.character(0.5 / sqrt(2)),
+      variable == "CRP (mg/l)" & str_detect(value, "<0\\.16") ~ as.character(0.16 / sqrt(2)),
+      variable == "CRP (mg/l)" & str_detect(value, "^<") ~ {
+        num_val <- as.numeric(str_extract(value, "[0-9.]+"))
+        as.character(num_val / sqrt(2))
+      },
+      TRUE ~ value
+    ),
+    value = as.numeric(value)
+  ) %>%
+  filter(
+    grepl("^[0-9]+$", study_id),
+    timepoint %in% c("T0","T1","T2"),
+    variable %in% lab_vars
+  ) %>%
+  mutate(timepoint = factor(timepoint, levels = c("T0","T1","T2")))
+
+## =========================
+## CLEAN METADATA (ONE ROW PER SUBJECT)
+## =========================
+FF_metadata_clean <- FF_metadata %>%
+  filter(grepl("^[0-9]+$", study_id)) %>%
+  group_by(study_id) %>%
+  summarise(
+    age = first_non_na(age),
+    BMI_baseline = first_non_na(BMI_baseline),
+    .groups = "drop"
+  )
+
+FF_metadata_clean <- FF_metadata_clean %>%
+  mutate(
+    age = readr::parse_number(as.character(age)),
+    BMI_baseline = readr::parse_number(as.character(BMI_baseline))
+  )
+
+
+## =========================
+## CLEAN DIET (ONE ROW PER SUBJECT)
+## =========================
+diet_lookup <- FF_diet %>%
+  group_by(study_id) %>%
+  summarise(FR_dietary = first_non_na(FR_dietary), .groups = "drop") %>%
+  mutate(
+    FR_dietary = stringr::str_trim(FR_dietary),
+    diet_keto = case_when(
+      FR_dietary == "KETO" ~ "Keto",
+      FR_dietary %in% c("normal", "Diabete Diet") ~ "Non-Keto",
+      TRUE ~ NA_character_
+    ),
+    diet_keto = factor(diet_keto, levels = c("Non-Keto", "Keto"))
+  )
+
+## =========================
+## MASTER LONG DATASET (everything joined)
+## =========================
+FF_laboratory_master <- FF_laboratory %>%
+  left_join(FF_fasting, by = "study_id") %>%
+  left_join(FF_metadata_clean, by = "study_id") %>%
+  left_join(diet_lookup %>% select(study_id, diet_keto), by = "study_id")
+
+FF_laboratory_master <- FF_laboratory_master %>%
+  mutate(
+    age = readr::parse_number(as.character(age)),
+    BMI_baseline = readr::parse_number(as.character(BMI_baseline)),
+    fasting_duration_measured = readr::parse_number(as.character(fasting_duration_measured)),
+    FR_duration = readr::parse_number(as.character(FR_duration)),
+    sex = factor(sex, levels = c("F","M"))
+  )
+
+## =========================
+## ANCOVA DATASET (LONG, baseline-adjusted; EXCLUDES % and optionally excludes TG/HDL)
+## =========================
+FF_laboratory_clean <- FF_laboratory %>%
+  arrange(study_id, variable, timepoint, datetime) %>%
+  group_by(study_id, variable, timepoint) %>%
+  summarise(
+    value = first(value[!is.na(value)]),
+    sex = first(sex),
+    .groups = "drop"
+  )
+
+baseline_df <- FF_laboratory_clean %>%
+  filter(timepoint == "T0") %>%
+  transmute(study_id, variable, baseline = value)
+
+FF_ancova <- FF_laboratory_clean %>%
+  filter(timepoint %in% c("T1","T2")) %>%
+  left_join(baseline_df, by = c("study_id","variable")) %>%
+  left_join(FF_metadata_clean, by = "study_id") %>%
+  mutate(
+    timepoint = factor(timepoint, levels = c("T1","T2")),
+    sex = factor(sex, levels = c("F","M"))
+  ) %>%
+  filter(!variable %in% percent_vars) %>%
+  filter(variable != "TG/HDL Ratio")   # remove ratios from ancova if needed 
+
+
+# =========================
+# Clean long lab dataset for CBC / immune cells only
+# (earliest sample per subject x marker x timepoint)
+# =========================
+immune_cells <- c(
+  "Neutrophils abs. (Tsd./µl)",
+  "Lymphocytes abs. (Tsd./µl)",
+  "Monocytes abs. (Tsd./µl)",
+  "Eosinophils abs. (Tsd./µl)",
+  "Basophils abs. (Tsd./µl)",
+  "Immature Granulocytes abs. (Tsd./µl)",
+  "White Blood Cells (Tsd./µl)",
+  "Platelets (Tsd./µl)"
+)
+
+labs_long_cells <- FF_laboratory_master %>%
+  filter(timepoint %in% c("T0","T1","T2")) %>%
+  filter(variable %in% immune_cells) %>%   # <- keeps it strictly CBC markers
+  group_by(study_id, variable, timepoint) %>%
+  slice_min(datetime, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  mutate(
+    timepoint = factor(timepoint, levels = c("T0","T1","T2")),
+    diet_keto = factor(diet_keto, levels = c("Non-Keto","Keto"))
+  )
+
+## metabolic health refeeding ANCOVA 
+metabolic_index_vars <- c("HOMA_IR", "TyG", "AIP", "non_HDL", "remnant_chol", "remnant_cholesterol")
+
+immune_index_vars <- c(
+  "NLR (ratio)", "PLR (ratio)", "LMR (ratio)", "SII (a.u.)",
+  "TG/HDL Ratio", "TG/HDL (ratio)", "TG/HDL (Ratio)"
+)
+
+# Anything that looks like an index/ratio 
+exclude_regex <- "(\\(Ratio\\))|\\(ratio\\))|(^AIP$)|(^TyG$)|(^HOMA)|(^non_HDL$)|(^remnant)|index"
+
+index_vars_exclude <- c(immune_index_vars, metabolic_index_vars)
+
+refeed_base <- FF_laboratory_master %>%
+  filter(timepoint %in% c("T1","T2")) %>%
+  group_by(study_id, variable, timepoint) %>%
+  slice_min(datetime, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  mutate(
+    timepoint = factor(timepoint, levels = c("T1","T2")),
+    sex       = factor(sex, levels = c("F","M")),
+    diet_keto = factor(diet_keto, levels = c("Non-Keto","Keto")),
+    FR_duration  = as.numeric(FR_duration),
+    age          = as.numeric(age),
+    BMI_baseline = as.numeric(BMI_baseline)
+  ) %>%
+  filter(
+    !variable %in% percent_vars,
+    !variable %in% index_vars_exclude,
+    !grepl(exclude_regex, variable, ignore.case = TRUE)
+  ) %>%
+  select(study_id, variable, timepoint, value, diet_keto, FR_duration, age, sex, BMI_baseline)
+
+
+# =========================================================
+# Shared helper for all heatmaps
+# =========================================================
+strip_dagger <- function(x) {
+  stringr::str_remove(as.character(x), "†$")
+}
+
+marker_order_clean <- c(
+  # Lipid
+  "Total Cholesterol (mg/dl)",
+  "LDL-C (mg/dl)",
+  "Non-HDL Cholesterol (mg/dl)",
+  "HDL-C (mg/dl)",
+  "Triglycerides (mg/dl)",
+
+  # Metabolic / Organ
+  "Serum Glucose (mg/dl)",
+  "Insulin (mIU/l)",
+  "GFR (ml/min)",
+  "Uric Acid (mg/dl)",
+  "Gamma-GT (U/l)",
+  "Alkaline Phosphatase (U/l)",
+  "GPT/ALT (U/l)",
+  "GOT/AST (U/l)",
+
+  # Inflammation & iron
+  "CRP (mg/l)",
+  "ESR (mm/h)",
+  "Ferritin (µg/l)",
+
+  # Circulating immune cells
+  "White Blood Cells (Tsd./µl)",
+  "Neutrophils abs. (Tsd./µl)",
+  "Lymphocytes abs. (Tsd./µl)",
+  "Monocytes abs. (Tsd./µl)",
+  "Eosinophils abs. (Tsd./µl)",
+  "Basophils abs. (Tsd./µl)",
+  "Immature Granulocytes abs. (Tsd./µl)",
+  "Platelets (Tsd./µl)"
+)
+
+assign_domain_from_variable <- function(variable_vec) {
+  variable_clean <- strip_dagger(variable_vec)
+
+  case_when(
+    variable_clean %in% c(
+      "Total Cholesterol (mg/dl)",
+      "LDL-C (mg/dl)",
+      "Non-HDL Cholesterol (mg/dl)",
+      "HDL-C (mg/dl)",
+      "Triglycerides (mg/dl)"
+    ) ~ "Lipid",
+
+    variable_clean %in% c(
+      "Serum Glucose (mg/dl)",
+      "Insulin (mIU/l)",
+      "GFR (ml/min)",
+      "Uric Acid (mg/dl)",
+      "Gamma-GT (U/l)",
+      "Alkaline Phosphatase (U/l)",
+      "GPT/ALT (U/l)",
+      "GOT/AST (U/l)"
+    ) ~ "Metabolic / Organ",
+
+    variable_clean %in% c(
+      "CRP (mg/l)",
+      "ESR (mm/h)",
+      "Ferritin (µg/l)"
+    ) ~ "Inflammation & iron",
+
+    variable_clean %in% c(
+      "White Blood Cells (Tsd./µl)",
+      "Neutrophils abs. (Tsd./µl)",
+      "Lymphocytes abs. (Tsd./µl)",
+      "Monocytes abs. (Tsd./µl)",
+      "Eosinophils abs. (Tsd./µl)",
+      "Basophils abs. (Tsd./µl)",
+      "Immature Granulocytes abs. (Tsd./µl)",
+      "Platelets (Tsd./µl)"
+    ) ~ "Circulating immune cells",
+
+    TRUE ~ "Other"
+  )
+}
+
+apply_manual_marker_order <- function(df, variable_col = "Variable") {
+  var_sym <- rlang::sym(variable_col)
+
+  marker_levels_present <- df %>%
+    distinct(!!var_sym) %>%
+    mutate(
+      Variable_clean = strip_dagger(as.character(!!var_sym)),
+      order_id = match(Variable_clean, marker_order_clean)
+    ) %>%
+    arrange(is.na(order_id), order_id, !!var_sym) %>%
+    pull(!!var_sym)
+
+  df %>%
+    mutate(
+      marker = factor(!!var_sym, levels = rev(marker_levels_present))
+    )
+}
+```
+
+## 0) Cohort description
+
+```{r cohort}
+## =========================================================
+## TABLE 1. Cohort description
+## =========================================================
+
+cohort_df <- FF_laboratory_master %>%
+  group_by(study_id) %>%
+  summarise(
+    age = first_non_na(age),
+    sex = first_non_na(as.character(sex)),
+    BMI_baseline = first_non_na(BMI_baseline),
+    fasting_duration_measured = first_non_na(fasting_duration_measured),
+    FR_duration = first_non_na(FR_duration),
+    diet_keto = first_non_na(as.character(diet_keto)),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    ## ── Data entry correction ──────────────────────────────
+    ## Subject 273 had an erroneous age of 597 (data entry error).
+    ## Corrected to 83.8 years based on source metadata verification.
+    age = ifelse(study_id == "273", 83.8, age),
+    ## ──────────────────────────────────────────────────────
+    sex = factor(sex, levels = c("F", "M")),
+    diet_keto = factor(diet_keto, levels = c("Non-Keto", "Keto")),
+    BMI_cat = factor(
+      make_bmi_cat(BMI_baseline),
+      levels = c("Normal", "Overweight", "Obese")
+    )
+  )
+
+# helpers
+fmt_num <- function(x, digits = 1) {
+  ifelse(is.na(x), NA_character_, format(round(x, digits), nsmall = digits))
+}
+
+fmt_mean_sd <- function(x, digits = 1) {
+  x <- x[!is.na(x)]
+  if (length(x) == 0) return(NA_character_)
+  paste0(fmt_num(mean(x), digits), " ± ", fmt_num(sd(x), digits))
+}
+
+fmt_median_iqr <- function(x, digits = 1) {
+  x <- x[!is.na(x)]
+  if (length(x) == 0) return(NA_character_)
+  q <- quantile(x, probs = c(0.25, 0.5, 0.75), na.rm = TRUE)
+  paste0(
+    fmt_num(q[2], digits),
+    " [", fmt_num(q[1], digits), ", ", fmt_num(q[3], digits), "]"
+  )
+}
+
+fmt_n_pct <- function(n, denom, digits = 1) {
+  if (is.na(denom) || denom == 0) return(NA_character_)
+  paste0(n, " (", fmt_num(100 * n / denom, digits), "%)")
+}
+
+# denominators
+n_total        <- nrow(cohort_df)
+n_diet_nonmiss <- sum(!is.na(cohort_df$diet_keto))
+n_bmi_nonmiss  <- sum(!is.na(cohort_df$BMI_cat))
+
+# final table
+table1_cohort <- tibble(
+  Characteristic = c(
+    "Number of subjects",
+    "Age (years), mean ± SD",
+    "Age (years), median [IQR]",
+    "Baseline BMI (kg/m²), mean ± SD",
+    "Baseline BMI (kg/m²), median [IQR]",
+    "BMI category: Normal, n (%)",
+    "BMI category: Overweight, n (%)",
+    "BMI category: Obese, n (%)",
+    "Fasting duration (days), mean ± SD",
+    "Fasting duration (days), median [IQR]",
+    "Refeeding duration (days), mean ± SD",
+    "Refeeding duration (days), median [IQR]",
+    "Female, n (%)",
+    "Male, n (%)",
+    "Diet: Non-Keto, n (%)",
+    "Diet: Keto, n (%)",
+    "Diet: Missing, n (%)"
+  ),
+  `Total cohort` = c(
+    n_total,
+    fmt_mean_sd(cohort_df$age, 1),
+    fmt_median_iqr(cohort_df$age, 1),
+    fmt_mean_sd(cohort_df$BMI_baseline, 1),
+    fmt_median_iqr(cohort_df$BMI_baseline, 1),
+    fmt_n_pct(sum(cohort_df$BMI_cat == "Normal",    na.rm = TRUE), n_bmi_nonmiss),
+    fmt_n_pct(sum(cohort_df$BMI_cat == "Overweight", na.rm = TRUE), n_bmi_nonmiss),
+    fmt_n_pct(sum(cohort_df$BMI_cat == "Obese",     na.rm = TRUE), n_bmi_nonmiss),
+    fmt_mean_sd(cohort_df$fasting_duration_measured, 1),
+    fmt_median_iqr(cohort_df$fasting_duration_measured, 1),
+    fmt_mean_sd(cohort_df$FR_duration, 1),
+    fmt_median_iqr(cohort_df$FR_duration, 1),
+    fmt_n_pct(sum(cohort_df$sex == "F", na.rm = TRUE), n_total),
+    fmt_n_pct(sum(cohort_df$sex == "M", na.rm = TRUE), n_total),
+    fmt_n_pct(sum(cohort_df$diet_keto == "Non-Keto", na.rm = TRUE), n_total),
+    fmt_n_pct(sum(cohort_df$diet_keto == "Keto",     na.rm = TRUE), n_total),
+    fmt_n_pct(sum(is.na(cohort_df$diet_keto)),                      n_total)
+  )
+)
+
+table1_cohort %>%
+  knitr::kable(
+    caption = "Table 1. Cohort characteristics.",
+    col.names = c("Characteristic", "Total cohort"),
+    align = c("l", "l")
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover"),
+    full_width = FALSE
+  )
+
+# verify the age correction worked
+cat("Age summary after correction:\n")
+print(summary(cohort_df$age))
+
+dir.create("ModelTables", showWarnings = FALSE)
+readr::write_csv(table1_cohort, "ModelTables/Table1_cohort_description.csv")
+```
+
+## 1) Descriptive Trajectories: Response to Overall Intervention
+
+```{r summary-boxplots (totpop,BMI)}
+## =========================
+## summary boxplots + median lines for all stratification (distribution) as well as whole pop
+## 
+## @vivi just to see the changes induced by the intervention, what rebounds, decrease or increases
+## significance will be tested later of course
+## now we just look at the data at face value and compare with basic biology
+## =========================
+markers_to_plot <- c(
+  immune_absolute_vars,
+  immune_percentage_vars,
+  inflammatory_vars,
+  lipid_vars,
+  metabolic_vars,
+  hematology_vars
+) %>%
+  strip_dagger() %>%
+  unique()
+
+markers_to_plot <- intersect(markers_to_plot, unique(FF_laboratory_master$variable))
+
+log1p_markers <- c(
+  immune_absolute_vars,
+  inflammatory_vars
+) %>%
+  strip_dagger() %>%
+  unique()
+
+plot_marker_box_medians <- function(
+  data,
+  marker,
+  use_log1p = FALSE,
+  cap_quantiles = c(0.01, 0.99)
+) {
+  df <- data %>%
+    filter(variable == marker, timepoint %in% c("T0", "T1", "T2"), !is.na(value)) %>%
+    mutate(
+      timepoint = factor(timepoint, levels = c("T0", "T1", "T2")),
+      BMI_cat = factor(
+        make_bmi_cat(BMI_baseline),
+        levels = c("Normal", "Overweight", "Obese")
+      )
+    )
+
+  if (nrow(df) == 0) return(NULL)
+
+  # cap per marker
+  lo <- quantile(df$value, cap_quantiles[1], na.rm = TRUE)
+  hi <- quantile(df$value, cap_quantiles[2], na.rm = TRUE)
+
+  df <- df %>%
+    mutate(
+      value_cap = pmin(pmax(value, lo), hi),
+      value_plot = if (use_log1p) log1p(value_cap) else value_cap
+    )
+
+  # medians on plotted scale
+  med_all <- df %>%
+    group_by(timepoint) %>%
+    summarise(med = median(value_plot, na.rm = TRUE), .groups = "drop") %>%
+    mutate(group = "All")
+
+  med_bmi <- df %>%
+    filter(!is.na(BMI_cat)) %>%
+    group_by(timepoint, BMI_cat) %>%
+    summarise(med = median(value_plot, na.rm = TRUE), .groups = "drop")
+
+  # means on capped original scale, then transformed for plotting
+  mean_all <- df %>%
+    group_by(timepoint) %>%
+    summarise(mean_cap = mean(value_cap, na.rm = TRUE), .groups = "drop") %>%
+    mutate(mean_plot = if (use_log1p) log1p(mean_cap) else mean_cap)
+
+  # n labels
+  n_tp <- df %>%
+    group_by(timepoint) %>%
+    summarise(n = n(), .groups = "drop") %>%
+    mutate(lbl = paste0("n=", n))
+
+  n_bmi <- df %>%
+    filter(!is.na(BMI_cat)) %>%
+    group_by(timepoint, BMI_cat) %>%
+    summarise(n = n(), .groups = "drop") %>%
+    mutate(lbl = paste0("n=", n))
+
+  y_top <- max(df$value_plot, na.rm = TRUE)
+  y_range <- diff(range(df$value_plot, na.rm = TRUE))
+  if (!is.finite(y_range) || y_range == 0) y_range <- 1
+
+  n_tp <- n_tp %>%
+  mutate(y = y_top + 0.04 * y_range)  # was 0.10 or 0.15
+
+  bmi_levels <- levels(df$BMI_cat)
+  n_bmi <- n_bmi %>%
+    mutate(
+      bmi_i = match(BMI_cat, bmi_levels),
+      y = y_top - (bmi_i - 1) * 0.06 * y_range
+    )
+
+  ggplot(df, aes(x = timepoint, y = value_plot)) +
+    geom_boxplot(
+      outlier.shape = NA,
+      width = 0.6,
+      alpha = 0.8
+    ) +
+    geom_line(
+      data = med_all,
+      aes(x = timepoint, y = med, group = group),
+      linewidth = 1.2,
+      alpha = 1.0,
+      inherit.aes = FALSE
+    ) +
+    geom_point(
+      data = med_all,
+      aes(x = timepoint, y = med),
+      size = 2.4,
+      alpha = 1.0,
+      inherit.aes = FALSE
+    ) +
+    geom_point(
+      data = mean_all,
+      aes(x = timepoint, y = mean_plot),
+      shape = 18,
+      size = 2.8,
+      color = "red",
+      inherit.aes = FALSE
+    ) +
+    geom_line(
+      data = med_bmi,
+      aes(x = timepoint, y = med, group = BMI_cat, linetype = BMI_cat),
+      linewidth = 0.9,
+      alpha = 0.45,
+      inherit.aes = FALSE
+    ) +
+    geom_point(
+      data = med_bmi,
+      aes(x = timepoint, y = med, group = BMI_cat),
+      size = 1.6,
+      alpha = 0.45,
+      inherit.aes = FALSE
+    ) +
+    geom_text(
+  data = n_tp,
+  aes(x = timepoint, y = y, label = lbl),
+  inherit.aes = FALSE,
+  size = 3,
+  fontface = "bold",
+  hjust = -0.2,
+  nudge_x = 0.1
+) +
+geom_text(
+  data = n_bmi,
+  aes(x = timepoint, y = y, label = paste0(BMI_cat, ": ", lbl)),
+  inherit.aes = FALSE,
+  size = 2.5,
+  alpha = 0.75,
+  hjust = -0.1,
+  nudge_x = 0.1
+) +
+    labs(
+      title = marker,
+      x = "Timepoint",
+      y = if (use_log1p) "Value (log1p; Winsorised 1st–99th pct)" else "Value (Winsorised 1st–99th pct)",
+      linetype = "BMI category"
+    ) +
+    theme_bw() +
+    theme(
+      legend.position = "bottom",
+      panel.grid.minor = element_blank(),
+      plot.margin = margin(8, 8, 8, 8)
+    )
+}
+
+dir.create("MarkerPlots_Medians", showWarnings = FALSE)
+
+plots_out <- vector("list", length(markers_to_plot))
+names(plots_out) <- markers_to_plot
+
+for (m in markers_to_plot) {
+  p <- plot_marker_box_medians(
+    FF_laboratory_master,
+    marker = m,
+    use_log1p = m %in% log1p_markers
+  )
+
+  plots_out[[m]] <- p
+
+  if (!is.null(p)) {
+    safe_name <- gsub("[^A-Za-z0-9]+", "_", m)
+    ggsave(
+      filename = file.path("MarkerPlots_Medians", paste0("Marker_", safe_name, ".png")),
+      plot = p,
+      width = 7,
+      height = 5,
+      dpi = 300
+    )
+  }
+}
+```
+
+## 2) Fasting Intervention
+
+```{r fasting-effects}
+## =====================================================================
+## FASTING ANALYSES (T0 vs T1) - CLEAN TEMPLATE
+## - same marker universe + ratio exclusions
+## - log-transform selected markers BEFORE modeling (applies to T0 & T1)
+## - centers continuous covariates within each marker sample (ALL models)
+## - prints LME (timepoint shift), LME (timepoint x fasting duration),
+##   ANCOVA (T1 ~ T0 + covariates), ANCOVA + BMI interaction, ANCOVA + Fast interaction
+## - FDR computed within each term across markers
+## =====================================================================
+min_n <- 20
+
+## -------------------------
+## 0) Marker lists + log list
+## -------------------------
+markers_fasting <- markers_lm %>%
+  setdiff(c("TG/HDL Ratio", "LDL/HDL Ratio (ratio)"))
+
+markers_log <- c(
+  "CRP (mg/l)",
+  "Ferritin (µg/l)",
+  "Triglycerides (mg/dl)",
+  "Insulin (mIU/l)",
+  "ESR (mm/h)",
+  "GPT/ALT (U/l)",
+  "GOT/AST (U/l)",
+  "Neutrophils abs. (Tsd./µl)",
+  "Lymphocytes abs. (Tsd./µl)",
+  "Monocytes abs. (Tsd./µl)",
+  "Eosinophils abs. (Tsd./µl)",
+  "Basophils abs. (Tsd./µl)",
+  "Immature Granulocytes abs. (Tsd./µl)",
+  "White Blood Cells (Tsd./µl)",
+  "Platelets (Tsd./µl)"
+)
+
+safe_log <- function(x) ifelse(!is.na(x) & x > 0, log(x), NA_real_)
+
+center_in_sample <- function(x) x - mean(x, na.rm = TRUE)
+
+fmt_ci <- function(lo, hi, digits = 3) {
+  ifelse(is.na(lo) | is.na(hi), NA_character_,
+         paste0("[", round(lo, digits), ", ", round(hi, digits), "]"))
+}
+
+## -------------------------
+## 1) Term sets (expected)
+## -------------------------
+terms_lme_time <- c("(Intercept)", "timepointT1", "age_c", "sexM", "BMI_c")
+
+terms_lme_fast <- c(
+  "(Intercept)",
+  "timepointT1",
+  "fast_c",
+  "timepointT1:fast_c",
+  "age_c",
+  "sexM",
+  "BMI_c"
+)
+
+terms_ancova_main <- c("T0_c", "fast_c", "BMI_c", "age_c", "sexM")
+
+terms_ancova_BMIint <- c("T0_c", "BMI_c", "T0_c:BMI_c", "fast_c", "age_c", "sexM")
+
+terms_ancova_FASTint <- c("T0_c", "fast_c", "T0_c:fast_c", "BMI_c", "age_c", "sexM")
+
+## -------------------------
+## 2) Pretty term names + ordering
+## -------------------------
+term_pretty_fasting <- function(term) {
+  dplyr::case_when(
+    term == "(Intercept)"      ~ "Intercept",
+    term == "timepointT1"      ~ "Timepoint: T1 vs T0",
+    term == "fast_c"           ~ "Fasting duration (days), centered",
+    term == "timepointT1:fast_c" ~ "Timepoint × fasting duration (Δ per day)",
+    term == "T0_c"             ~ "Baseline (T0), centered",
+    term == "BMI_c"            ~ "Baseline BMI (kg/m²), centered",
+    term == "age_c"            ~ "Age (years), centered",
+    term == "sexM"             ~ "Sex: Male (vs Female)",
+    term == "T0_c:BMI_c"       ~ "T0 × BMI (baseline dependency differs by BMI)",
+    term == "T0_c:fast_c"      ~ "T0 × fasting duration (baseline dependency differs by duration)",
+    TRUE ~ term
+  )
+}
+
+term_order_fasting <- function(term) {
+  dplyr::case_when(
+    term %in% c("timepointT1:fast_c") ~ 1L,
+    term %in% c("timepointT1")        ~ 2L,
+    term %in% c("T0_c:BMI_c", "T0_c:fast_c") ~ 3L,
+    term %in% c("T0_c")               ~ 4L,
+    term %in% c("fast_c")             ~ 5L,
+    term %in% c("BMI_c")              ~ 6L,
+    term %in% c("age_c")              ~ 7L,
+    term %in% c("sexM")               ~ 8L,
+    term == "(Intercept)"             ~ 9L,
+    TRUE ~ 99L
+  )
+}
+
+## -------------------------
+## 3) Build ONE clean long dataset (T0/T1)
+## -------------------------
+fasting_long <- FF_laboratory_master %>%
+  filter(
+    variable %in% markers_fasting,
+    timepoint %in% c("T0","T1"),
+    !is.na(value)
+  ) %>%
+  group_by(study_id, variable, timepoint) %>%
+  slice_min(datetime, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  mutate(
+    timepoint = factor(timepoint, levels = c("T0","T1")),
+    sex       = factor(sex, levels = c("F","M")),
+
+    age  = readr::parse_number(as.character(age)),
+    BMI_baseline = readr::parse_number(as.character(BMI_baseline)),
+    fasting_duration_measured = readr::parse_number(as.character(fasting_duration_measured)),
+
+    value = ifelse(variable %in% markers_log, safe_log(value), value),
+
+    Variable = ifelse(variable %in% markers_log, paste0(variable, "†"), variable)
+  ) %>%
+  filter(!is.na(value))
+
+## =====================================================================
+## 4.1) Fasting average shift (LME) - ALL TERMS
+## Model: value ~ timepoint + age_c + sex + BMI_c + (1|study_id)
+## =====================================================================
+
+lme_time_tbl <- fasting_long %>%
+  group_by(variable) %>%
+  group_modify(~{
+    df <- .x %>%
+      drop_na(value, timepoint, age, sex, BMI_baseline)
+
+    n_subj <- n_distinct(df$study_id)
+    if (n_subj < min_n) {
+      return(tibble(
+        term = terms_lme_time,
+        estimate = NA_real_, std.error = NA_real_,
+        conf.low = NA_real_, conf.high = NA_real_,
+        p.value = NA_real_,
+        n_subjects = n_subj
+      ))
+    }
+
+    df <- df %>%
+      mutate(
+        age_c = center_in_sample(age),
+        BMI_c = center_in_sample(BMI_baseline)
+      )
+
+    fit <- lmer(value ~ timepoint + age_c + sex + BMI_c + (1|study_id), data = df)
+
+    broom.mixed::tidy(fit, effects = "fixed", conf.int = TRUE) %>%
+      filter(term %in% terms_lme_time) %>%
+      mutate(n_subjects = n_subj)
+  }) %>%
+  ungroup() %>%
+  mutate(p_raw = p.value) %>%
+  group_by(term) %>%
+  mutate(p_fdr = p.adjust(p_raw, method = "BH")) %>%
+  ungroup()
+
+lme_time_table <- lme_time_tbl %>%
+  left_join(fasting_long %>% distinct(variable, Variable), by = "variable") %>%
+  mutate(
+    Term = term_pretty_fasting(term),
+    Term_order = term_order_fasting(term),
+    Estimate = round(estimate, 3),
+    SE = round(std.error, 3),
+    `95% CI` = fmt_ci(conf.low, conf.high, digits = 3),
+    `P (raw)` = fmt_p(p_raw),
+    `P (FDR)` = fmt_p(p_fdr),
+    `Signif.` = p_stars(p_fdr)
+  ) %>%
+  select(
+    Variable, Term, Estimate, SE, `95% CI`,
+    `P (raw)`, `P (FDR)`, `Signif.`,
+    `n (subjects)` = n_subjects,
+    Term_order, p_fdr
+  ) %>%
+  arrange(Term_order, is.na(p_fdr), p_fdr, Variable) %>%
+  select(-Term_order, -p_fdr)
+
+lme_time_table %>%
+  kbl(
+    caption = "Fasting LME (all fixed effects): value ~ timepoint + centered age + sex + centered BMI + (1|study_id). FDR computed within each term across markers.",
+    align = "l"
+  ) %>%
+  kable_styling(bootstrap_options = c("striped","hover"), full_width = FALSE) %>%
+  footnote(general = "† Log-transformed prior to centering and modeling.") %>%
+  scroll_box(width = "100%", height = "650px")
+
+dir.create("ModelTables", showWarnings = FALSE)
+write_csv(lme_time_table, file.path("ModelTables", "LME_fasting_all_terms_T0T1.csv"))
+
+## =====================================================================
+## 4.2) Fasting duration modulation (LME) - ALL TERMS
+## Model: value ~ timepoint * fast_c + age_c + sex + BMI_c + (1|study_id)
+## =====================================================================
+
+lme_fastmod_tbl <- fasting_long %>%
+  group_by(variable) %>%
+  group_modify(~{
+    df <- .x %>%
+      drop_na(value, timepoint, fasting_duration_measured, age, sex, BMI_baseline)
+
+    n_subj <- n_distinct(df$study_id)
+    if (n_subj < min_n) {
+      return(tibble(
+        term = terms_lme_fast,
+        estimate = NA_real_, std.error = NA_real_,
+        conf.low = NA_real_, conf.high = NA_real_,
+        p.value = NA_real_,
+        n_subjects = n_subj
+      ))
+    }
+
+    df <- df %>%
+      mutate(
+        fast_c = center_in_sample(fasting_duration_measured),
+        age_c  = center_in_sample(age),
+        BMI_c  = center_in_sample(BMI_baseline)
+      )
+
+    fit <- lmer(value ~ timepoint * fast_c + age_c + sex + BMI_c + (1|study_id), data = df)
+
+    broom.mixed::tidy(fit, effects = "fixed", conf.int = TRUE) %>%
+      filter(term %in% terms_lme_fast) %>%
+      mutate(n_subjects = n_subj)
+  }) %>%
+  ungroup() %>%
+  mutate(p_raw = p.value) %>%
+  group_by(term) %>%
+  mutate(p_fdr = p.adjust(p_raw, method = "BH")) %>%
+  ungroup()
+
+lme_fastmod_table <- lme_fastmod_tbl %>%
+  left_join(fasting_long %>% distinct(variable, Variable), by = "variable") %>%
+  mutate(
+    Term = term_pretty_fasting(term),
+    Term_order = term_order_fasting(term),
+    Estimate = round(estimate, 3),
+    SE = round(std.error, 3),
+    `95% CI` = fmt_ci(conf.low, conf.high, digits = 3),
+    `P (raw)` = fmt_p(p_raw),
+    `P (FDR)` = fmt_p(p_fdr),
+    `Signif.` = p_stars(p_fdr)
+  ) %>%
+  select(
+    Variable, Term, Estimate, SE, `95% CI`,
+    `P (raw)`, `P (FDR)`, `Signif.`,
+    `n (subjects)` = n_subjects,
+    Term_order, p_fdr
+  ) %>%
+  arrange(Term_order, is.na(p_fdr), p_fdr, Variable) %>%
+  select(-Term_order, -p_fdr)
+
+lme_fastmod_table %>%
+  kbl(
+    caption = "Fasting LME (all fixed effects): value ~ timepoint × centered fasting duration + centered age + sex + centered BMI + (1|study_id). FDR computed within each term across markers.",
+    align = "l"
+  ) %>%
+  kable_styling(bootstrap_options = c("striped","hover"), full_width = FALSE) %>%
+  footnote(general = "† Log-transformed prior to centering and modeling.") %>%
+  scroll_box(width = "100%", height = "650px")
+
+write_csv(lme_fastmod_table, file.path("ModelTables", "LME_fasting_timepointXfast_all_terms_T0T1.csv"))
+
+## =====================================================================
+## 4.3) Fasting ANCOVA (main effects)
+## Model: T1 ~ T0_c + fast_c + BMI_c + age_c + sex
+## (centering is within marker sample; log already applied in fasting_long)
+## =====================================================================
+
+fasting_wide <- fasting_long %>%
+  select(study_id, variable, Variable, timepoint, value, fasting_duration_measured, age, sex, BMI_baseline) %>%
+  pivot_wider(names_from = timepoint, values_from = value) %>%
+  filter(!is.na(T0), !is.na(T1)) %>%
+  group_by(variable) %>%
+  mutate(
+    T0_c   = center_in_sample(T0),
+    fast_c = center_in_sample(fasting_duration_measured),
+    age_c  = center_in_sample(age),
+    BMI_c  = center_in_sample(BMI_baseline)
+  ) %>%
+  ungroup()
+
+ancova_main_tbl <- fasting_wide %>%
+  group_by(variable) %>%
+  group_modify(~{
+    df <- .x %>% drop_na(T1, T0_c, fast_c, BMI_c, age_c, sex)
+
+    n_subj <- n_distinct(df$study_id)
+    if (n_subj < min_n) {
+      return(tibble(
+        term = terms_ancova_main,
+        estimate = NA_real_, std.error = NA_real_,
+        conf.low = NA_real_, conf.high = NA_real_,
+        p.value = NA_real_,
+        n_subjects = n_subj
+      ))
+    }
+
+    fit <- lm(T1 ~ T0_c + fast_c + BMI_c + age_c + sex, data = df)
+
+    broom::tidy(fit, conf.int = TRUE) %>%
+      filter(term %in% terms_ancova_main) %>%
+      mutate(n_subjects = n_subj)
+  }) %>%
+  ungroup() %>%
+  mutate(p_raw = p.value) %>%
+  group_by(term) %>%
+  mutate(p_fdr = p.adjust(p_raw, method = "BH")) %>%
+  ungroup()
+
+ancova_main_table <- ancova_main_tbl %>%
+  left_join(fasting_wide %>% distinct(variable, Variable), by = "variable") %>%
+  mutate(
+    Term = term_pretty_fasting(term),
+    Term_order = term_order_fasting(term),
+    Estimate = round(estimate, 3),
+    SE = round(std.error, 3),
+    `95% CI` = fmt_ci(conf.low, conf.high, digits = 3),
+    `P (raw)` = fmt_p(p_raw),
+    `P (FDR)` = fmt_p(p_fdr),
+    `Signif.` = p_stars(p_fdr)
+  ) %>%
+  select(
+    Variable, Term, Estimate, SE, `95% CI`,
+    `P (raw)`, `P (FDR)`, `Signif.`,
+    `n (subjects)` = n_subjects,
+    Term_order, p_fdr
+  ) %>%
+  arrange(Term_order, is.na(p_fdr), p_fdr, Variable) %>%
+  select(-Term_order, -p_fdr)
+
+ancova_main_table %>%
+  kbl(
+    caption = "Fasting ANCOVA (per marker): T1 adjusted for centered T0 + centered fasting duration + centered BMI + centered age + sex. FDR computed within each term across markers.",
+    align = "l"
+  ) %>%
+  kable_styling(bootstrap_options = c("striped","hover"), full_width = FALSE) %>%
+  footnote(general = "† Log-transformed prior to centering and modeling.") %>%
+  scroll_box(width = "100%", height = "650px")
+
+write_csv(ancova_main_table, file.path("ModelTables", "LM_fasting_ANCOVA_main_all_terms_T1onT0.csv"))
+
+## =====================================================================
+## 4.4) Fasting ANCOVA + BMI interaction
+## Model: T1 ~ T0_c * BMI_c + fast_c + age_c + sex
+## =====================================================================
+
+ancova_BMIint_tbl <- fasting_wide %>%
+  group_by(variable) %>%
+  group_modify(~{
+    df <- .x %>% drop_na(T1, T0_c, BMI_c, fast_c, age_c, sex)
+
+    n_subj <- n_distinct(df$study_id)
+    if (n_subj < min_n) {
+      return(tibble(
+        term = terms_ancova_BMIint,
+        estimate = NA_real_, std.error = NA_real_,
+        conf.low = NA_real_, conf.high = NA_real_,
+        p.value = NA_real_,
+        n_subjects = n_subj
+      ))
+    }
+
+    fit <- lm(T1 ~ T0_c * BMI_c + fast_c + age_c + sex, data = df)
+
+    broom::tidy(fit, conf.int = TRUE) %>%
+      filter(term %in% terms_ancova_BMIint) %>%
+      mutate(n_subjects = n_subj)
+  }) %>%
+  ungroup() %>%
+  mutate(p_raw = p.value) %>%
+  group_by(term) %>%
+  mutate(p_fdr = p.adjust(p_raw, method = "BH")) %>%
+  ungroup()
+
+ancova_BMIint_table <- ancova_BMIint_tbl %>%
+  left_join(fasting_wide %>% distinct(variable, Variable), by = "variable") %>%
+  mutate(
+    Term = term_pretty_fasting(term),
+    Term_order = term_order_fasting(term),
+    Estimate = round(estimate, 3),
+    SE = round(std.error, 3),
+    `95% CI` = fmt_ci(conf.low, conf.high, digits = 3),
+    `P (raw)` = fmt_p(p_raw),
+    `P (FDR)` = fmt_p(p_fdr),
+    `Signif.` = p_stars(p_fdr)
+  ) %>%
+  select(
+    Variable, Term, Estimate, SE, `95% CI`,
+    `P (raw)`, `P (FDR)`, `Signif.`,
+    `n (subjects)` = n_subjects,
+    Term_order, p_fdr
+  ) %>%
+  arrange(Term_order, is.na(p_fdr), p_fdr, Variable) %>%
+  select(-Term_order, -p_fdr)
+
+ancova_BMIint_table %>%
+  kbl(
+    caption = "Fasting ANCOVA + BMI interaction (per marker): T1 ~ centered T0 × centered BMI + centered fasting duration + centered age + sex. FDR within term across markers.",
+    align = "l"
+  ) %>%
+  kable_styling(bootstrap_options = c("striped","hover"), full_width = FALSE) %>%
+  footnote(general = "† Log-transformed prior to centering and modeling.") %>%
+  scroll_box(width = "100%", height = "650px")
+
+write_csv(ancova_BMIint_table, file.path("ModelTables", "LM_fasting_ANCOVA_T0xBMI_all_terms_T1onT0.csv"))
+
+## =====================================================================
+## 4.5) Fasting ANCOVA + fasting duration interaction
+## Model: T1 ~ T0_c * fast_c + BMI_c + age_c + sex
+## =====================================================================
+
+ancova_FASTint_tbl <- fasting_wide %>%
+  group_by(variable) %>%
+  group_modify(~{
+    df <- .x %>% drop_na(T1, T0_c, fast_c, BMI_c, age_c, sex)
+
+    n_subj <- n_distinct(df$study_id)
+    if (n_subj < min_n) {
+      return(tibble(
+        term = terms_ancova_FASTint,
+        estimate = NA_real_, std.error = NA_real_,
+        conf.low = NA_real_, conf.high = NA_real_,
+        p.value = NA_real_,
+        n_subjects = n_subj
+      ))
+    }
+
+    fit <- lm(T1 ~ T0_c * fast_c + BMI_c + age_c + sex, data = df)
+
+    broom::tidy(fit, conf.int = TRUE) %>%
+      filter(term %in% terms_ancova_FASTint) %>%
+      mutate(n_subjects = n_subj)
+  }) %>%
+  ungroup() %>%
+  mutate(p_raw = p.value) %>%
+  group_by(term) %>%
+  mutate(p_fdr = p.adjust(p_raw, method = "BH")) %>%
+  ungroup()
+
+ancova_FASTint_table <- ancova_FASTint_tbl %>%
+  left_join(fasting_wide %>% distinct(variable, Variable), by = "variable") %>%
+  mutate(
+    Term = term_pretty_fasting(term),
+    Term_order = term_order_fasting(term),
+    Estimate = round(estimate, 3),
+    SE = round(std.error, 3),
+    `95% CI` = fmt_ci(conf.low, conf.high, digits = 3),
+    `P (raw)` = fmt_p(p_raw),
+    `P (FDR)` = fmt_p(p_fdr),
+    `Signif.` = p_stars(p_fdr)
+  ) %>%
+  select(
+    Variable, Term, Estimate, SE, `95% CI`,
+    `P (raw)`, `P (FDR)`, `Signif.`,
+    `n (subjects)` = n_subjects,
+    Term_order, p_fdr
+  ) %>%
+  arrange(Term_order, is.na(p_fdr), p_fdr, Variable) %>%
+  select(-Term_order, -p_fdr)
+
+ancova_FASTint_table %>%
+  kbl(
+    caption = "Fasting ANCOVA + fasting duration interaction (per marker): T1 ~ centered T0 × centered fasting duration + centered BMI + centered age + sex. FDR within term across markers.",
+    align = "l"
+  ) %>%
+  kable_styling(bootstrap_options = c("striped","hover"), full_width = FALSE) %>%
+  footnote(general = "† Log-transformed prior to centering and modeling.") %>%
+  scroll_box(width = "100%", height = "650px")
+
+write_csv(ancova_FASTint_table, file.path("ModelTables", "LM_fasting_ANCOVA_T0xFast_all_terms_T1onT0.csv"))
+```
+
+
+
+## 3) Refeeding Intervention
+
+```{r sats-refeed, message=FALSE, warning=FALSE}
+## =====================================================================
+## REFEEDING ANALYSES (T1 vs T2) - FASTING-STYLE TEMPLATE (CLEAN)
+## - same marker universe and ratio exclusions as fasting
+## - log-transform selected markers BEFORE modeling (applies to T1 & T2)
+## - centers continuous covariates within each marker sample
+## - shows ALL fixed-effect terms (LMEs)
+## - FDR computed within each term across markers
+## =====================================================================
+
+min_n <- 20
+
+## -------------------------
+## 0) Consistent marker lists
+## -------------------------
+# Same universe and ratio exclusions as fasting
+markers_refeed <- markers_lm %>%
+  setdiff(c("TG/HDL Ratio", "LDL/HDL Ratio (ratio)"))
+
+# Same log group as fasting (you already validated positivity in audit)
+markers_log <- c(
+  "CRP (mg/l)",
+  "Ferritin (µg/l)",
+  "Triglycerides (mg/dl)",
+  "Insulin (mIU/l)",
+  "ESR (mm/h)",
+  "GPT/ALT (U/l)",
+  "GOT/AST (U/l)",
+  "Neutrophils abs. (Tsd./µl)",
+  "Lymphocytes abs. (Tsd./µl)",
+  "Monocytes abs. (Tsd./µl)",
+  "Eosinophils abs. (Tsd./µl)",
+  "Basophils abs. (Tsd./µl)",
+  "Immature Granulocytes abs. (Tsd./µl)",
+  "White Blood Cells (Tsd./µl)",
+  "Platelets (Tsd./µl)"
+)
+
+safe_log <- function(x) if_else(!is.na(x) & x > 0, log(x), NA_real_)
+
+## -------------------------
+## 1) Term sets (expected)
+## -------------------------
+terms_lme_time <- c("(Intercept)", "timepointT2", "age_c", "sexM", "BMI_c")
+
+terms_lme_fr <- c(
+  "(Intercept)",
+  "timepointT2",
+  "FR_c",
+  "timepointT2:FR_c",
+  "age_c",
+  "sexM",
+  "BMI_c"
+)
+
+terms_ancova <- c("T1_c", "diet_ketoKeto", "FR_c", "age_c", "sexM", "BMI_c")
+
+## -------------------------
+## 2) Pretty terms + ordering
+## -------------------------
+term_pretty_refeed <- function(term) {
+  dplyr::case_when(
+    term == "(Intercept)"        ~ "Intercept",
+    term == "timepointT2"        ~ "Timepoint: T2 vs T1",
+    term == "FR_c"               ~ "Refeeding duration (days), centered",
+    term == "timepointT2:FR_c"   ~ "Timepoint × refeeding duration (Δ per day)",
+    term == "T1_c"               ~ "End of fasting (T1), centered",
+    term == "diet_ketoKeto"      ~ "Diet: Keto (vs Non-Keto)",
+    term == "age_c"              ~ "Age (years), centered",
+    term == "sexM"               ~ "Sex: Male (vs Female)",
+    term == "BMI_c"              ~ "Baseline BMI (kg/m²), centered",
+    TRUE ~ term
+  )
+}
+
+term_order_refeed <- function(term) {
+  dplyr::case_when(
+    term == "timepointT2:FR_c" ~ 1L,
+    term == "timepointT2"      ~ 2L,
+    term == "T1_c"             ~ 3L,
+    term == "diet_ketoKeto"    ~ 4L,
+    term == "FR_c"             ~ 5L,
+    term == "BMI_c"            ~ 6L,
+    term == "age_c"            ~ 7L,
+    term == "sexM"             ~ 8L,
+    term == "(Intercept)"      ~ 9L,
+    TRUE ~ 99L
+  )
+}
+
+## -------------------------
+## 3) Build ONE clean long dataset (T1/T2)
+## -------------------------
+refeed_long <- refeed_base %>%
+  filter(
+    variable %in% markers_refeed,
+    timepoint %in% c("T1","T2"),
+    !is.na(value)
+  ) %>%
+  mutate(
+    timepoint = factor(timepoint, levels = c("T1","T2")),
+    sex       = factor(sex, levels = c("F","M")),
+    diet_keto = factor(diet_keto, levels = c("Non-Keto","Keto")),  # ensures diet_ketoKeto exists
+
+    age          = as.numeric(age),
+    BMI_baseline = as.numeric(BMI_baseline),
+    FR_duration  = as.numeric(FR_duration),
+
+    # log BEFORE modeling (applies at both timepoints)
+    value = if_else(variable %in% markers_log, safe_log(value), value),
+
+    # dagger label for tables
+    Variable = if_else(variable %in% markers_log, paste0(variable, "†"), variable)
+  ) %>%
+  filter(!is.na(value))  # drop NA created by safe_log (should be none per your audit)
+
+## =====================================================================
+## 8.1) Refeeding average shift (LME) - ALL TERMS
+## Model: value ~ timepoint + age_c + sex + BMI_c + (1|study_id)
+## =====================================================================
+
+lme_time_tbl <- refeed_long %>%
+  group_by(variable) %>%
+  group_modify(~{
+    df <- .x %>% drop_na(value, timepoint, age, sex, BMI_baseline)
+
+    n_subj <- n_distinct(df$study_id)
+    if (n_subj < min_n) {
+      return(tibble(
+        term = terms_lme_time,
+        estimate = NA_real_, std.error = NA_real_,
+        conf.low = NA_real_, conf.high = NA_real_,
+        p.value = NA_real_,
+        n_subjects = n_subj
+      ))
+    }
+
+    # center within marker sample
+    df <- df %>%
+      mutate(
+        age_c = age - mean(age, na.rm = TRUE),
+        BMI_c = BMI_baseline - mean(BMI_baseline, na.rm = TRUE)
+      )
+
+    fit <- lmer(value ~ timepoint + age_c + sex + BMI_c + (1 | study_id), data = df)
+
+    broom.mixed::tidy(fit, effects = "fixed", conf.int = TRUE) %>%
+      filter(term %in% terms_lme_time) %>%
+      mutate(n_subjects = n_subj)
+  }) %>%
+  ungroup() %>%
+  mutate(p_raw = p.value) %>%
+  group_by(term) %>%
+  mutate(p_fdr = p.adjust(p_raw, method = "BH")) %>%
+  ungroup()
+
+lme_time_table <- lme_time_tbl %>%
+  left_join(refeed_long %>% distinct(variable, Variable), by = "variable") %>%
+  mutate(
+    Term = term_pretty_refeed(term),
+    Term_order = term_order_refeed(term),
+    Estimate = round(estimate, 3),
+    SE = round(std.error, 3),
+    `95% CI` = ifelse(
+      is.na(conf.low) | is.na(conf.high),
+      NA_character_,
+      paste0("[", round(conf.low, 3), ", ", round(conf.high, 3), "]")
+    ),
+    `P (raw)` = fmt_p(p_raw),
+    `P (FDR)` = fmt_p(p_fdr),
+    `Signif.` = p_stars(p_fdr)
+  ) %>%
+  select(
+    Variable, Term, Estimate, SE, `95% CI`,
+    `P (raw)`, `P (FDR)`, `Signif.`,
+    `n (subjects)` = n_subjects,
+    Term_order, p_fdr
+  ) %>%
+  arrange(Term_order, is.na(p_fdr), p_fdr, Variable) %>%
+  select(-Term_order, -p_fdr)
+
+lme_time_table %>%
+  kbl(
+    caption = "Refeeding LME (all fixed effects): value ~ timepoint + age + sex + BMI + (1|study_id). FDR computed within each term across markers.",
+    align = "l"
+  ) %>%
+  kable_styling(bootstrap_options = c("striped","hover"), full_width = FALSE) %>%
+  footnote(general = "† Log-transformed prior to centering and modeling.") %>%
+  scroll_box(width = "100%", height = "650px")
+
+dir.create("ModelTables", showWarnings = FALSE)
+write_csv(lme_time_table, file.path("ModelTables", "LME_refeed_all_terms_T1T2.csv"))
+
+## =====================================================================
+## 8.2) Refeeding duration modulation (LME) - ALL TERMS
+## Model: value ~ timepoint * FR_c + age_c + sex + BMI_c + (1|study_id)
+## =====================================================================
+
+lme_frmod_tbl <- refeed_long %>%
+  group_by(variable) %>%
+  group_modify(~{
+    df <- .x %>% drop_na(value, timepoint, FR_duration, age, sex, BMI_baseline)
+
+    n_subj <- n_distinct(df$study_id)
+    if (n_subj < min_n) {
+      return(tibble(
+        term = terms_lme_fr,
+        estimate = NA_real_, std.error = NA_real_,
+        conf.low = NA_real_, conf.high = NA_real_,
+        p.value = NA_real_,
+        n_subjects = n_subj
+      ))
+    }
+
+    df <- df %>%
+      mutate(
+        FR_c  = FR_duration  - mean(FR_duration, na.rm = TRUE),
+        age_c = age          - mean(age, na.rm = TRUE),
+        BMI_c = BMI_baseline - mean(BMI_baseline, na.rm = TRUE)
+      )
+
+    fit <- lmer(value ~ timepoint * FR_c + age_c + sex + BMI_c + (1 | study_id), data = df)
+
+    broom.mixed::tidy(fit, effects = "fixed", conf.int = TRUE) %>%
+      filter(term %in% terms_lme_fr) %>%
+      mutate(n_subjects = n_subj)
+  }) %>%
+  ungroup() %>%
+  mutate(p_raw = p.value) %>%
+  group_by(term) %>%
+  mutate(p_fdr = p.adjust(p_raw, method = "BH")) %>%
+  ungroup()
+
+lme_frmod_table <- lme_frmod_tbl %>%
+  left_join(refeed_long %>% distinct(variable, Variable), by = "variable") %>%
+  mutate(
+    Term = term_pretty_refeed(term),
+    Term_order = term_order_refeed(term),
+    Estimate = round(estimate, 3),
+    SE = round(std.error, 3),
+    `95% CI` = ifelse(
+      is.na(conf.low) | is.na(conf.high),
+      NA_character_,
+      paste0("[", round(conf.low, 3), ", ", round(conf.high, 3), "]")
+    ),
+    `P (raw)` = fmt_p(p_raw),
+    `P (FDR)` = fmt_p(p_fdr),
+    `Signif.` = p_stars(p_fdr)
+  ) %>%
+  select(
+    Variable, Term, Estimate, SE, `95% CI`,
+    `P (raw)`, `P (FDR)`, `Signif.`,
+    `n (subjects)` = n_subjects,
+    Term_order, p_fdr
+  ) %>%
+  arrange(Term_order, is.na(p_fdr), p_fdr, Variable) %>%
+  select(-Term_order, -p_fdr)
+
+lme_frmod_table %>%
+  kbl(
+    caption = "Refeeding LME (all fixed effects): value ~ timepoint * centered FR_duration + age + sex + BMI + (1|study_id). FDR computed within each term across markers.",
+    align = "l"
+  ) %>%
+  kable_styling(bootstrap_options = c("striped","hover"), full_width = FALSE) %>%
+  footnote(general = "† Log-transformed prior to centering and modeling.") %>%
+  scroll_box(width = "100%", height = "650px")
+
+write_csv(lme_frmod_table, file.path("ModelTables", "LME_refeed_timepointXFR_all_terms_T1T2.csv"))
+
+## =====================================================================
+## 8.3) Refeeding ANCOVA (fasting-style)
+## Model: T2 ~ T1_c + diet_keto + FR_c + age_c + sex + BMI_c
+## - log-transform is applied to BOTH T1 and T2 via refeed_long BEFORE widening
+## - centers within marker sample
+## - shows ALL terms in term_keep; FDR within term across markers
+## =====================================================================
+
+refeed_wide <- refeed_long %>%
+  select(study_id, variable, Variable, timepoint, value, diet_keto, FR_duration, age, sex, BMI_baseline) %>%
+  pivot_wider(names_from = timepoint, values_from = value) %>%
+  filter(!is.na(T1), !is.na(T2)) %>%
+  group_by(variable) %>%
+  mutate(
+    T1_c  = T1 - mean(T1, na.rm = TRUE),
+    FR_c  = FR_duration - mean(FR_duration, na.rm = TRUE),
+    age_c = age - mean(age, na.rm = TRUE),
+    BMI_c = BMI_baseline - mean(BMI_baseline, na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+ancova_tbl_refeed <- refeed_wide %>%
+  group_by(variable) %>%
+  group_modify(~{
+    df <- .x %>% drop_na(T1_c, T2, diet_keto, FR_c, age_c, sex, BMI_c)
+
+    n_subj <- n_distinct(df$study_id)
+    if (n_subj < min_n) {
+      return(tibble(
+        term = terms_ancova,
+        estimate = NA_real_, std.error = NA_real_,
+        conf.low = NA_real_, conf.high = NA_real_,
+        p.value = NA_real_,
+        n_subjects = n_subj
+      ))
+    }
+
+    fit <- lm(T2 ~ T1_c + diet_keto + FR_c + age_c + sex + BMI_c, data = df)
+
+    broom::tidy(fit, conf.int = TRUE) %>%
+      filter(term %in% terms_ancova) %>%
+      mutate(n_subjects = n_subj)
+  }) %>%
+  ungroup() %>%
+  mutate(p_raw = p.value) %>%
+  group_by(term) %>%
+  mutate(p_fdr = p.adjust(p_raw, method = "BH")) %>%
+  ungroup()
+
+ancova_table_refeed <- ancova_tbl_refeed %>%
+  left_join(refeed_wide %>% distinct(variable, Variable), by = "variable") %>%
+  mutate(
+    Term = term_pretty_refeed(term),
+    Term_order = term_order_refeed(term),
+    Estimate = round(estimate, 3),
+    SE = round(std.error, 3),
+    `95% CI` = ifelse(
+      is.na(conf.low) | is.na(conf.high),
+      NA_character_,
+      paste0("[", round(conf.low, 3), ", ", round(conf.high, 3), "]")
+    ),
+    `P (raw)` = fmt_p(p_raw),
+    `P (FDR)` = fmt_p(p_fdr),
+    `Signif.` = p_stars(p_fdr)
+  ) %>%
+  select(
+    Variable, Term, Estimate, SE, `95% CI`,
+    `P (raw)`, `P (FDR)`, `Signif.`,
+    `n (subjects)` = n_subjects,
+    Term_order, p_fdr
+  ) %>%
+  arrange(Term_order, is.na(p_fdr), p_fdr, Variable) %>%
+  select(-Term_order, -p_fdr)
+
+ancova_table_refeed %>%
+  kbl(
+    caption = "Refeeding ANCOVA (per marker): T2 adjusted for centered T1 + diet + centered FR_duration (+ age, sex, BMI). FDR computed within each term across markers.",
+    align = "l"
+  ) %>%
+  kable_styling(bootstrap_options = c("striped","hover"), full_width = FALSE) %>%
+  footnote(general = "† Log-transformed prior to centering and modeling.") %>%
+  scroll_box(width = "100%", height = "650px")
+
+write_csv(ancova_table_refeed, file.path("ModelTables", "LM_refeed_ANCOVA_centered_all_terms_T2onT1.csv"))
+
+## =====================================================================
+## 8.4) Refeeding ANCOVA + Keto interaction
+## Model: T2 ~ T1_c * diet_keto + FR_c + age_c + sex + BMI_c
+## Question: Does the T1→T2 relationship differ by Keto vs Non-Keto?
+## (i.e., baseline dependency differs by diet group)
+## =====================================================================
+
+terms_ancova_keto_int <- c(
+  "T1_c",
+  "diet_ketoKeto",
+  "T1_c:diet_ketoKeto",
+  "FR_c",
+  "age_c",
+  "sexM",
+  "BMI_c"
+)
+
+term_pretty_refeed2 <- function(term) {
+  dplyr::case_when(
+    term == "T1_c"                 ~ "End of fasting (T1), centered",
+    term == "diet_ketoKeto"        ~ "Diet: Keto (vs Non-Keto)",
+    term == "T1_c:BMI_c"         ~ "T1 × BMI (baseline dependency differs by BMI)",
+    term == "T1_c:diet_ketoKeto"   ~ "T1 × Diet (baseline dependency differs by diet)",
+    term == "FR_c"                 ~ "Refeeding duration (days), centered",
+    term == "age_c"                ~ "Age (years), centered",
+    term == "sexM"                 ~ "Sex: Male (vs Female)",
+    term == "BMI_c"                ~ "Baseline BMI (kg/m²), centered",
+    term == "(Intercept)"          ~ "Intercept",
+    TRUE ~ term
+  )
+}
+
+term_order_refeed2 <- function(term) {
+  dplyr::case_when(
+    term == "T1_c:diet_ketoKeto" ~ 1L,
+    term == "T1_c:BMI_c"         ~ 1L,   # used in next model too
+    term == "T1_c"               ~ 2L,
+    term == "diet_ketoKeto"      ~ 3L,
+    term == "BMI_c"              ~ 4L,
+    term == "FR_c"               ~ 5L,
+    term == "age_c"              ~ 6L,
+    term == "sexM"               ~ 7L,
+    term == "(Intercept)"        ~ 8L,
+    TRUE ~ 99L
+  )
+}
+
+ancova_tbl_refeed_keto_int <- refeed_wide %>%
+  group_by(variable) %>%
+  group_modify(~{
+    df <- .x %>% drop_na(T1_c, T2, diet_keto, FR_c, age_c, sex, BMI_c)
+
+    n_subj <- n_distinct(df$study_id)
+    if (n_subj < min_n) {
+      return(tibble(
+        term = terms_ancova_keto_int,
+        estimate = NA_real_, std.error = NA_real_,
+        conf.low = NA_real_, conf.high = NA_real_,
+        p.value = NA_real_,
+        n_subjects = n_subj
+      ))
+    }
+
+    fit <- lm(T2 ~ T1_c * diet_keto + FR_c + age_c + sex + BMI_c, data = df)
+
+    broom::tidy(fit, conf.int = TRUE) %>%
+      filter(term %in% terms_ancova_keto_int) %>%
+      mutate(n_subjects = n_subj)
+  }) %>%
+  ungroup() %>%
+  mutate(p_raw = p.value) %>%
+  group_by(term) %>%
+  mutate(p_fdr = p.adjust(p_raw, method = "BH")) %>%
+  ungroup()
+
+ancova_table_refeed_keto_int <- ancova_tbl_refeed_keto_int %>%
+  left_join(refeed_wide %>% distinct(variable, Variable), by = "variable") %>%
+  mutate(
+    Term = term_pretty_refeed2(term),
+    Term_order = term_order_refeed2(term),
+    Estimate = round(estimate, 3),
+    SE = round(std.error, 3),
+    `95% CI` = ifelse(
+      is.na(conf.low) | is.na(conf.high),
+      NA_character_,
+      paste0("[", round(conf.low, 3), ", ", round(conf.high, 3), "]")
+    ),
+    `P (raw)` = fmt_p(p_raw),
+    `P (FDR)` = fmt_p(p_fdr),
+    `Signif.` = p_stars(p_fdr)
+  ) %>%
+  select(
+    Variable, Term, Estimate, SE, `95% CI`,
+    `P (raw)`, `P (FDR)`, `Signif.`,
+    `n (subjects)` = n_subjects,
+    Term_order, p_fdr
+  ) %>%
+  arrange(Term_order, is.na(p_fdr), p_fdr, Variable) %>%
+  select(-Term_order, -p_fdr)
+
+ancova_table_refeed_keto_int %>%
+  kbl(
+    caption = "Refeeding ANCOVA + diet interaction: T2 ~ T1_c * diet_keto + FR_c + age_c + sex + BMI_c. FDR computed within each term across markers.",
+    align = "l"
+  ) %>%
+  kable_styling(bootstrap_options = c("striped","hover"), full_width = FALSE) %>%
+  footnote(general = "† Log-transformed prior to centering and modeling.") %>%
+  scroll_box(width = "100%", height = "650px")
+
+write_csv(
+  ancova_table_refeed_keto_int,
+  file.path("ModelTables", "LM_refeed_ANCOVA_T2onT1_dietInteraction.csv")
+)
+
+
+## =====================================================================
+## 8.5) Refeeding ANCOVA + BMI interaction
+## Model: T2 ~ T1_c * BMI_c + diet_keto + FR_c + age_c + sex
+## Question: Does baseline dependency (T1→T2) differ by BMI?
+## =====================================================================
+
+terms_ancova_bmi_int <- c(
+  "T1_c",
+  "BMI_c",
+  "T1_c:BMI_c",
+  "diet_ketoKeto",
+  "FR_c",
+  "age_c",
+  "sexM"
+)
+
+ancova_tbl_refeed_bmi_int <- refeed_wide %>%
+  group_by(variable) %>%
+  group_modify(~{
+    df <- .x %>% drop_na(T1_c, T2, diet_keto, FR_c, age_c, sex, BMI_c)
+
+    n_subj <- n_distinct(df$study_id)
+    if (n_subj < min_n) {
+      return(tibble(
+        term = terms_ancova_bmi_int,
+        estimate = NA_real_, std.error = NA_real_,
+        conf.low = NA_real_, conf.high = NA_real_,
+        p.value = NA_real_,
+        n_subjects = n_subj
+      ))
+    }
+
+    fit <- lm(T2 ~ T1_c * BMI_c + diet_keto + FR_c + age_c + sex, data = df)
+
+    broom::tidy(fit, conf.int = TRUE) %>%
+      filter(term %in% terms_ancova_bmi_int) %>%
+      mutate(n_subjects = n_subj)
+  }) %>%
+  ungroup() %>%
+  mutate(p_raw = p.value) %>%
+  group_by(term) %>%
+  mutate(p_fdr = p.adjust(p_raw, method = "BH")) %>%
+  ungroup()
+
+ancova_table_refeed_bmi_int <- ancova_tbl_refeed_bmi_int %>%
+  left_join(refeed_wide %>% distinct(variable, Variable), by = "variable") %>%
+  mutate(
+    Term = term_pretty_refeed2(term),
+    Term_order = term_order_refeed2(term),
+    Estimate = round(estimate, 3),
+    SE = round(std.error, 3),
+    `95% CI` = ifelse(
+      is.na(conf.low) | is.na(conf.high),
+      NA_character_,
+      paste0("[", round(conf.low, 3), ", ", round(conf.high, 3), "]")
+    ),
+    `P (raw)` = fmt_p(p_raw),
+    `P (FDR)` = fmt_p(p_fdr),
+    `Signif.` = p_stars(p_fdr)
+  ) %>%
+  select(
+    Variable, Term, Estimate, SE, `95% CI`,
+    `P (raw)`, `P (FDR)`, `Signif.`,
+    `n (subjects)` = n_subjects,
+    Term_order, p_fdr
+  ) %>%
+  arrange(Term_order, is.na(p_fdr), p_fdr, Variable) %>%
+  select(-Term_order, -p_fdr)
+
+ancova_table_refeed_bmi_int %>%
+  kbl(
+    caption = "Refeeding ANCOVA + BMI interaction: T2 ~ T1_c * BMI_c + diet_keto + FR_c + age_c + sex. FDR computed within each term across markers.",
+    align = "l"
+  ) %>%
+  kable_styling(bootstrap_options = c("striped","hover"), full_width = FALSE) %>%
+  footnote(general = "† Log-transformed prior to centering and modeling.") %>%
+  scroll_box(width = "100%", height = "650px")
+
+write_csv(
+  ancova_table_refeed_bmi_int,
+  file.path("ModelTables", "LM_refeed_ANCOVA_T2onT1_BMIInteraction.csv")
+)
+
+## =====================================================================
+## 8.6) Refeeding ANCOVA + FR interaction (baseline dependency differs by refeeding duration)
+## Model (per marker): T2 ~ T1_c * FR_c + diet_keto + BMI_c + age_c + sex
+## - uses refeed_long (already log-transformed for markers_log) BEFORE widening
+## - centers within marker sample
+## - shows ALL terms; FDR computed within each term across markers
+## =====================================================================
+
+# --- terms expected in this model
+terms_ancova_FRint <- c(
+  "T1_c",
+  "FR_c",
+  "T1_c:FR_c",
+  "diet_ketoKeto",
+  "BMI_c",
+  "age_c",
+  "sexM"
+)
+
+# --- pretty names + ordering (add FR interaction)
+term_pretty_ancova_FRint <- function(term) {
+  dplyr::case_when(
+    term == "T1_c"          ~ "End of fasting (T1), centered",
+    term == "FR_c"          ~ "Refeeding duration (days), centered",
+    term == "T1_c:FR_c"     ~ "T1 × refeeding duration (baseline dependency mod.)",
+    term == "diet_ketoKeto" ~ "Diet: Keto (vs Non-Keto)",
+    term == "BMI_c"         ~ "Baseline BMI (kg/m²), centered",
+    term == "age_c"         ~ "Age (years), centered",
+    term == "sexM"          ~ "Sex: Male (vs Female)",
+    term == "(Intercept)"   ~ "Intercept",
+    TRUE ~ term
+  )
+}
+
+term_order_ancova_FRint <- function(term) {
+  dplyr::case_when(
+    term == "T1_c:FR_c"     ~ 1L,
+    term == "T1_c"          ~ 2L,
+    term == "FR_c"          ~ 3L,
+    term == "diet_ketoKeto" ~ 4L,
+    term == "BMI_c"         ~ 5L,
+    term == "age_c"         ~ 6L,
+    term == "sexM"          ~ 7L,
+    term == "(Intercept)"   ~ 8L,
+    TRUE ~ 99L
+  )
+}
+
+# --- wide dataset from refeed_long (log already applied there)
+refeed_wide_FRint <- refeed_long %>%
+  select(study_id, variable, Variable, timepoint, value,
+         diet_keto, FR_duration, age, sex, BMI_baseline) %>%
+  pivot_wider(names_from = timepoint, values_from = value) %>%
+  filter(!is.na(T1), !is.na(T2)) %>%
+  group_by(variable) %>%
+  mutate(
+    T1_c  = T1 - mean(T1, na.rm = TRUE),
+    FR_c  = FR_duration - mean(FR_duration, na.rm = TRUE),
+    age_c = age - mean(age, na.rm = TRUE),
+    BMI_c = BMI_baseline - mean(BMI_baseline, na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+ancova_tbl_refeed_FRint <- refeed_wide_FRint %>%
+  group_by(variable) %>%
+  group_modify(~{
+    df <- .x %>% drop_na(T2, T1_c, FR_c, diet_keto, BMI_c, age_c, sex)
+
+    n_subj <- n_distinct(df$study_id)
+    if (n_subj < min_n) {
+      return(tibble(
+        term = c("(Intercept)", terms_ancova_FRint),
+        estimate = NA_real_, std.error = NA_real_,
+        conf.low = NA_real_, conf.high = NA_real_,
+        p.value = NA_real_,
+        n_subjects = n_subj
+      ))
+    }
+
+    fit <- lm(T2 ~ T1_c * FR_c + diet_keto + BMI_c + age_c + sex, data = df)
+
+    broom::tidy(fit, conf.int = TRUE) %>%
+      filter(term %in% c("(Intercept)", terms_ancova_FRint)) %>%
+      mutate(n_subjects = n_subj)
+  }) %>%
+  ungroup() %>%
+  mutate(p_raw = p.value) %>%
+  group_by(term) %>%
+  mutate(p_fdr = p.adjust(p_raw, method = "BH")) %>%
+  ungroup()
+
+ancova_table_refeed_FRint <- ancova_tbl_refeed_FRint %>%
+  left_join(refeed_wide_FRint %>% distinct(variable, Variable), by = "variable") %>%
+  mutate(
+    Term = term_pretty_ancova_FRint(term),
+    Term_order = term_order_ancova_FRint(term),
+
+    Estimate = round(estimate, 3),
+    SE = round(std.error, 3),
+    `95% CI` = ifelse(
+      is.na(conf.low) | is.na(conf.high),
+      NA_character_,
+      paste0("[", round(conf.low, 3), ", ", round(conf.high, 3), "]")
+    ),
+    `P (raw)` = fmt_p(p_raw),
+    `P (FDR)` = fmt_p(p_fdr),
+    `Signif.` = p_stars(p_fdr)
+  ) %>%
+  select(
+    Variable, Term, Estimate, SE, `95% CI`,
+    `P (raw)`, `P (FDR)`, `Signif.`,
+    `n (subjects)` = n_subjects,
+    Term_order, p_fdr
+  ) %>%
+  arrange(Term_order, is.na(p_fdr), p_fdr, Variable) %>%
+  select(-Term_order, -p_fdr)
+
+ancova_table_refeed_FRint %>%
+  kbl(
+    caption = "Refeeding ANCOVA + FR interaction (per marker): T2 ~ T1_c * FR_c + diet + BMI + age + sex. FDR computed within each term across markers.",
+    align = "l"
+  ) %>%
+  kable_styling(bootstrap_options = c("striped","hover"), full_width = FALSE) %>%
+  footnote(general = "† Log-transformed prior to centering and modeling.") %>%
+  scroll_box(width = "100%", height = "650px")
+
+write_csv(
+  ancova_table_refeed_FRint,
+  file.path("ModelTables", "LM_refeed_ANCOVA_T2onT1_T1xFR_centered_all_terms.csv")
+)
+```
+
+## 4) Heterogeneity and bidirectionality of circulating immune cells
+
+```{r immune-waterfall, message=FALSE, warning=FALSE}
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(tidyr)
+  library(ggplot2)
+  library(forcats)
+  library(stringr)
+})
+
+## ============================================================
+## Build wide immune-cell datasets for waterfall plots
+## ============================================================
+
+# FASTING: T0 -> T1
+cells_fast_wide <- labs_long_cells %>%
+  filter(timepoint %in% c("T0", "T1")) %>%
+  select(study_id, variable, timepoint, value) %>%
+  pivot_wider(
+    names_from = timepoint,
+    values_from = value
+  ) %>%
+  filter(!is.na(T0), !is.na(T1)) %>%
+  mutate(delta_T1_T0 = T1 - T0)
+
+# REFEEDING: T1 -> T2
+cells_refeed_wide <- labs_long_cells %>%
+  filter(timepoint %in% c("T1", "T2")) %>%
+  select(study_id, variable, timepoint, value) %>%
+  pivot_wider(
+    names_from = timepoint,
+    values_from = value
+  ) %>%
+  filter(!is.na(T1), !is.na(T2)) %>%
+  mutate(delta_T2_T1 = T2 - T1)
+
+## -------------------------
+## Pretty facet labels
+## -------------------------
+clean_cell_label <- function(x) {
+  x %>%
+    str_replace_all(" abs\\. \\(Tsd\\./µl\\)", "") %>%
+    str_replace_all(" \\(Tsd\\./µl\\)", "") %>%
+    str_replace_all("([a-z])([A-Z])", "\\1 \\2") %>%
+    str_to_title()
+}
+
+marker_order_cells <- c(
+  "White Blood Cells (Tsd./µl)",
+  "Neutrophils abs. (Tsd./µl)",
+  "Lymphocytes abs. (Tsd./µl)",
+  "Monocytes abs. (Tsd./µl)",
+  "Eosinophils abs. (Tsd./µl)",
+  "Basophils abs. (Tsd./µl)",
+  "Immature Granulocytes abs. (Tsd./µl)",
+  "Platelets (Tsd./µl)"
+)
+
+## -------------------------
+## Helper: waterfall plot
+## -------------------------
+plot_waterfall_delta <- function(df_wide, delta_name, y_label) {
+
+  df_long <- df_wide %>%
+    select(study_id, variable, all_of(delta_name)) %>%
+    filter(!is.na(.data[[delta_name]])) %>%
+    mutate(
+      variable = factor(variable, levels = marker_order_cells),
+      variable_label = clean_cell_label(as.character(variable))
+    ) %>%
+    group_by(variable) %>%
+    arrange(.data[[delta_name]], .by_group = TRUE) %>%
+    mutate(rank_within = row_number()) %>%
+    ungroup()
+
+  ggplot(df_long, aes(x = rank_within, y = .data[[delta_name]])) +
+    geom_hline(yintercept = 0, linetype = "dashed", linewidth = 0.8) +
+    geom_col(width = 0.9, alpha = 0.85, fill = "grey45") +
+    facet_wrap(~ variable_label, scales = "free_y", ncol = 3) +
+    labs(
+      title = NULL,
+      x = "Individuals (ordered by change)",
+      y = y_label
+    ) +
+    scale_y_continuous(expand = expansion(mult = c(0.05, 0.08))) +
+    theme_bw(base_size = 12) +
+    theme(
+      panel.grid.minor = element_blank(),
+      panel.grid.major.x = element_blank(),
+      axis.text.x = element_blank(),
+      axis.ticks.x = element_blank(),
+      axis.title.x = element_text(
+        face = "plain",
+        margin = margin(t = 12)
+      ),
+      axis.title.y = element_text(
+        face = "plain",
+        margin = margin(r = 10)
+      ),
+      strip.background = element_rect(fill = "grey92", color = "black"),
+      strip.text = element_text(face = "bold", size = 11),
+      plot.title = element_blank()
+    )
+}
+
+## -------------------------
+## Make plots
+## -------------------------
+p_water_fast <- plot_waterfall_delta(
+  cells_fast_wide,
+  delta_name = "delta_T1_T0",
+  y_label = expression(Delta~"Cell Count (Tsd./"*mu*"l, T1 - T0)")
+)
+
+p_water_refeed <- plot_waterfall_delta(
+  cells_refeed_wide,
+  delta_name = "delta_T2_T1",
+  y_label = expression(Delta~"Cell Count (Tsd./"*mu*"l, T2 - T1)")
+)
+
+print(p_water_fast)
+print(p_water_refeed)
+
+dir.create("ResultsFigures", showWarnings = FALSE)
+
+ggsave(
+  "ResultsFigures/waterfall_immune_cells_fasting.png",
+  p_water_fast,
+  width = 10.5,
+  height = 8,
+  dpi = 600
+)
+
+ggsave(
+  "ResultsFigures/waterfall_immune_cells_fasting.pdf",
+  p_water_fast,
+  width = 10.5,
+  height = 8
+)
+
+ggsave(
+  "ResultsFigures/waterfall_immune_cells_refeeding.png",
+  p_water_refeed,
+  width = 10.5,
+  height = 8,
+  dpi = 600
+)
+
+ggsave(
+  "ResultsFigures/waterfall_immune_cells_refeeding.pdf",
+  p_water_refeed,
+  width = 10.5,
+  height = 8
+)
+```
+
+## 5) Average Phase Shift
+
+```{r lme-heatmap-fasting-refeed-average, message=FALSE, warning=FALSE}
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(readr)
+  library(scales)
+  library(stringr)
+})
+
+# ---- paths
+base_dir <- "C:/Users/megbi/Desktop/BA/Differential Blood Count Graphs/Master script 2.0/ModelTables"
+fast_path   <- file.path(base_dir, "LME_fasting_all_terms_T0T1.csv")
+refeed_path <- file.path(base_dir, "LME_refeed_all_terms_T1T2.csv")
+
+fast_tab   <- read_csv(fast_path, show_col_types = FALSE)
+refeed_tab <- read_csv(refeed_path, show_col_types = FALSE)
+
+# ---- helper: remove dagger for matching only
+strip_dagger <- function(x) {
+  stringr::str_remove(as.character(x), "†$")
+}
+
+# ---- MANUAL marker order (same structure/order you want to reuse later)
+marker_order_clean <- c(
+  # Lipid
+  "Total Cholesterol (mg/dl)",
+  "LDL-C (mg/dl)",
+  "Non-HDL Cholesterol (mg/dl)",
+  "HDL-C (mg/dl)",
+  "Triglycerides (mg/dl)",
+
+  # Metabolic / Organ
+  "Serum Glucose (mg/dl)",
+  "Insulin (mIU/l)",
+  "GFR (ml/min)",
+  "Uric Acid (mg/dl)",
+  "Gamma-GT (U/l)",
+  "Alkaline Phosphatase (U/l)",
+  "GPT/ALT (U/l)",
+  "GOT/AST (U/l)",
+
+  # Inflammation & iron
+  "CRP (mg/l)",
+  "ESR (mm/h)",
+  "Ferritin (µg/l)",
+
+  # Circulating immune cells
+  "White Blood Cells (Tsd./µl)",
+  "Neutrophils abs. (Tsd./µl)",
+  "Lymphocytes abs. (Tsd./µl)",
+  "Monocytes abs. (Tsd./µl)",
+  "Eosinophils abs. (Tsd./µl)",
+  "Basophils abs. (Tsd./µl)",
+  "Immature Granulocytes abs. (Tsd./µl)",
+  "Platelets (Tsd./µl)"
+)
+
+# ---- robust extractor
+extract_shift <- function(df, phase_label, term_regex) {
+  out <- df %>%
+    mutate(Term = as.character(Term)) %>%
+    filter(grepl(term_regex, Term)) %>%
+    mutate(
+      phase = phase_label,
+      Estimate = as.numeric(Estimate),
+      signif_star = case_when(
+        is.na(`Signif.`) ~ "",
+        str_trim(as.character(`Signif.`)) == "ns" ~ "",
+        TRUE ~ as.character(`Signif.`)
+      )
+    )
+
+  if (nrow(out) == 0) {
+    stop(paste0("No rows matched term_regex='", term_regex, "' for phase='", phase_label, "'."))
+  }
+
+  out
+}
+
+fast_shift <- extract_shift(fast_tab,   "Fasting",   "T1\\s*vs\\s*T0")
+refe_shift <- extract_shift(refeed_tab, "Refeeding", "T2\\s*vs\\s*T1")
+
+lme_shift_all <- bind_rows(fast_shift, refe_shift) %>%
+  mutate(
+    phase = factor(phase, levels = c("Fasting", "Refeeding")),
+    contrast = if_else(phase == "Fasting", "T1 vs T0", "T2 vs T1"),
+    contrast = factor(contrast, levels = c("T1 vs T0", "T2 vs T1")),
+
+    Variable_clean = strip_dagger(Variable)
+  )
+
+# ---- domain classification using clean labels
+domain_order <- c("Lipid", "Metabolic / Organ", "Inflammation & iron", "Circulating immune cells", "Other")
+
+lme_shift_all <- lme_shift_all %>%
+  mutate(
+    domain = case_when(
+      Variable_clean %in% c(
+        "Total Cholesterol (mg/dl)",
+        "LDL-C (mg/dl)",
+        "Non-HDL Cholesterol (mg/dl)",
+        "HDL-C (mg/dl)",
+        "Triglycerides (mg/dl)"
+      ) ~ "Lipid",
+
+      Variable_clean %in% c(
+        "Serum Glucose (mg/dl)",
+        "Insulin (mIU/l)",
+        "GFR (ml/min)",
+        "Uric Acid (mg/dl)",
+        "Gamma-GT (U/l)",
+        "Alkaline Phosphatase (U/l)",
+        "GPT/ALT (U/l)",
+        "GOT/AST (U/l)"
+      ) ~ "Metabolic / Organ",
+
+      Variable_clean %in% c(
+        "CRP (mg/l)",
+        "ESR (mm/h)",
+        "Ferritin (µg/l)"
+      ) ~ "Inflammation & iron",
+
+      Variable_clean %in% c(
+        "White Blood Cells (Tsd./µl)",
+        "Neutrophils abs. (Tsd./µl)",
+        "Lymphocytes abs. (Tsd./µl)",
+        "Monocytes abs. (Tsd./µl)",
+        "Eosinophils abs. (Tsd./µl)",
+        "Basophils abs. (Tsd./µl)",
+        "Immature Granulocytes abs. (Tsd./µl)",
+        "Platelets (Tsd./µl)"
+      ) ~ "Circulating immune cells",
+
+      TRUE ~ "Other"
+    ),
+    domain = factor(domain, levels = domain_order)
+  )
+
+# ---- manual marker ordering
+marker_levels_present <- lme_shift_all %>%
+  distinct(Variable, Variable_clean) %>%
+  mutate(order_id = match(Variable_clean, marker_order_clean)) %>%
+  arrange(is.na(order_id), order_id, Variable) %>%
+  pull(Variable)
+
+lme_shift_all <- lme_shift_all %>%
+  mutate(
+    marker = factor(Variable, levels = rev(marker_levels_present))
+  )
+
+# ---- scaling
+lims <- range(lme_shift_all$Estimate, na.rm = TRUE)
+
+signed_sqrt_trans <- scales::trans_new(
+  name = "signed_sqrt",
+  transform = function(x) sign(x) * sqrt(abs(x)),
+  inverse   = function(x) sign(x) * (abs(x)^2)
+)
+
+# ---- plot
+p_heat2 <- ggplot(lme_shift_all, aes(x = contrast, y = marker, fill = Estimate)) +
+  geom_tile(color = "grey92", linewidth = 0.25) +
+  geom_text(aes(label = signif_star), size = 4.7) +
+  facet_grid(
+    domain ~ phase,
+    scales = "free",
+    space  = "free_y",
+    switch = "y"
+  ) +
+  scale_y_discrete(expand = expansion(mult = 0.04)) +
+  scale_x_discrete(drop = TRUE, expand = expansion(mult = 0.04)) +
+  scale_fill_gradient2(
+    low = "#0f766e",
+    mid = "#ddd5c6",
+    high = "#f59e0b",
+    midpoint = 0,
+    limits = lims,
+    oob = scales::squish,
+    trans = signed_sqrt_trans,
+    breaks = c(-23.0, 0, 4.8),
+    name = "Estimate"
+  ) +
+  labs(x = NULL, y = NULL) +
+  theme_bw() +
+  theme(
+    strip.placement = "outside",
+    strip.background = element_blank(),
+    strip.text.y.left = element_text(angle = 0, face = "bold", size = 11),
+    strip.text.x = element_text(face = "bold", size = 12),
+    panel.spacing.y = unit(0.5, "lines"),
+    panel.spacing.x = unit(0.5, "lines"),
+    panel.grid = element_blank(),
+    plot.margin = margin(5, 5, 5, 5),
+    axis.text.y = element_text(size = 10),
+    axis.text.x = element_text(size = 11),
+    legend.position = "right"
+  )
+
+p_heat2
+
+# ---- save
+out_dir <- "C:/Users/megbi/Desktop/BA/Differential Blood Count Graphs/Master script 2.0/ResultsFigures"
+dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+
+ggsave(file.path(out_dir, "heatmap_LME_fasting_vs_refeed_two_columns_fixedOrder.png"),
+       p_heat2, width = 10.5, height = 10.5, dpi = 300)
+
+ggsave(file.path(out_dir, "heatmap_LME_fasting_vs_refeed_two_columns_fixedOrder.pdf"),
+       p_heat2, width = 10.5, height = 10.5)
+
+summary(lme_shift_all$Estimate)
+```
+
+## 6) Duration dependence
+
+```{r lme-heatmap-fasting-refeed-dose, message=FALSE, warning=FALSE}
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(readr)
+  library(stringr)
+  library(scales)
+})
+
+# ---- paths
+base_dir <- "C:/Users/megbi/Desktop/BA/Differential Blood Count Graphs/Master script 2.0/ModelTables"
+fast_int_path   <- file.path(base_dir, "LME_fasting_timepointXfast_all_terms_T0T1.csv")
+refeed_int_path <- file.path(base_dir, "LME_refeed_timepointXFR_all_terms_T1T2.csv")
+
+fast_int_tab   <- read_csv(fast_int_path, show_col_types = FALSE)
+refeed_int_tab <- read_csv(refeed_int_path, show_col_types = FALSE)
+
+# ---- helper: remove dagger for matching only
+strip_dagger <- function(x) {
+  stringr::str_remove(as.character(x), "†$")
+}
+
+# ---- manual marker order (same as section 8)
+marker_order_clean <- c(
+  # Lipid
+  "Total Cholesterol (mg/dl)",
+  "LDL-C (mg/dl)",
+  "Non-HDL Cholesterol (mg/dl)",
+  "HDL-C (mg/dl)",
+  "Triglycerides (mg/dl)",
+
+  # Metabolic / Organ
+  "Serum Glucose (mg/dl)",
+  "Insulin (mIU/l)",
+  "GFR (ml/min)",
+  "Uric Acid (mg/dl)",
+  "Gamma-GT (U/l)",
+  "Alkaline Phosphatase (U/l)",
+  "GPT/ALT (U/l)",
+  "GOT/AST (U/l)",
+
+  # Inflammation & iron
+  "CRP (mg/l)",
+  "ESR (mm/h)",
+  "Ferritin (µg/l)",
+
+  # Circulating immune cells
+  "White Blood Cells (Tsd./µl)",
+  "Neutrophils abs. (Tsd./µl)",
+  "Lymphocytes abs. (Tsd./µl)",
+  "Monocytes abs. (Tsd./µl)",
+  "Eosinophils abs. (Tsd./µl)",
+  "Basophils abs. (Tsd./µl)",
+  "Immature Granulocytes abs. (Tsd./µl)",
+  "Platelets (Tsd./µl)"
+)
+
+# ---- helper: domain assignment
+assign_domain_from_variable <- function(x) {
+  x_clean <- strip_dagger(x)
+
+  case_when(
+    x_clean %in% c(
+      "Total Cholesterol (mg/dl)",
+      "LDL-C (mg/dl)",
+      "Non-HDL Cholesterol (mg/dl)",
+      "HDL-C (mg/dl)",
+      "Triglycerides (mg/dl)"
+    ) ~ "Lipid",
+
+    x_clean %in% c(
+      "Serum Glucose (mg/dl)",
+      "Insulin (mIU/l)",
+      "GFR (ml/min)",
+      "Uric Acid (mg/dl)",
+      "Gamma-GT (U/l)",
+      "Alkaline Phosphatase (U/l)",
+      "GPT/ALT (U/l)",
+      "GOT/AST (U/l)"
+    ) ~ "Metabolic / Organ",
+
+    x_clean %in% c(
+      "CRP (mg/l)",
+      "ESR (mm/h)",
+      "Ferritin (µg/l)"
+    ) ~ "Inflammation & iron",
+
+    x_clean %in% c(
+      "White Blood Cells (Tsd./µl)",
+      "Neutrophils abs. (Tsd./µl)",
+      "Lymphocytes abs. (Tsd./µl)",
+      "Monocytes abs. (Tsd./µl)",
+      "Eosinophils abs. (Tsd./µl)",
+      "Basophils abs. (Tsd./µl)",
+      "Immature Granulocytes abs. (Tsd./µl)",
+      "Platelets (Tsd./µl)"
+    ) ~ "Circulating immune cells",
+
+    TRUE ~ "Other"
+  )
+}
+
+# ---- helper: apply manual marker order
+apply_manual_marker_order <- function(df, variable_col = "Variable") {
+  var_sym <- rlang::sym(variable_col)
+
+  marker_levels_present <- df %>%
+    distinct(!!var_sym) %>%
+    mutate(
+      Variable_clean = strip_dagger(as.character(!!var_sym)),
+      order_id = match(Variable_clean, marker_order_clean)
+    ) %>%
+    arrange(is.na(order_id), order_id, !!var_sym) %>%
+    pull(!!var_sym)
+
+  df %>%
+    mutate(marker = factor(!!var_sym, levels = rev(marker_levels_present)))
+}
+
+# ---- extract interaction term
+extract_term_exact <- function(df, phase_label, term_exact, term_regex_fallback = NULL) {
+
+  df2 <- df %>%
+    mutate(
+      Term = as.character(Term),
+      Variable = as.character(Variable),
+      Estimate = suppressWarnings(as.numeric(Estimate)),
+      signif_star = as.character(`Signif.`)
+    )
+
+  out <- df2 %>% filter(Term == term_exact)
+
+  if (nrow(out) == 0 && !is.null(term_regex_fallback)) {
+    out <- df2 %>%
+      filter(str_detect(Term, regex(term_regex_fallback, ignore_case = TRUE)))
+  }
+
+  if (nrow(out) == 0) {
+    stop(
+      paste0(
+        "Could not find interaction term for phase='", phase_label, "'.\n",
+        "Expected exact Term = '", term_exact, "'.\n",
+        "Available Term values are:\n- ",
+        paste(unique(df2$Term), collapse = "\n- ")
+      )
+    )
+  }
+
+  out %>% mutate(phase = phase_label)
+}
+
+fast_int <- extract_term_exact(
+  fast_int_tab,
+  phase_label = "Fasting",
+  term_exact  = "Timepoint × fasting duration (Δ per day)",
+  term_regex_fallback = "timepoint\\s*[×x]\\s*fasting\\s*duration.*(Δ|delta)\\s*per\\s*day"
+)
+
+refe_int <- extract_term_exact(
+  refeed_int_tab,
+  phase_label = "Refeeding",
+  term_exact  = "Timepoint × refeeding duration (Δ per day)",
+  term_regex_fallback = "timepoint\\s*[×x]\\s*refeeding\\s*duration.*(Δ|delta)\\s*per\\s*day"
+)
+
+# ---- combine
+lme_int_all <- bind_rows(fast_int, refe_int) %>%
+  mutate(
+    phase = factor(phase, levels = c("Fasting", "Refeeding")),
+    dose_label = if_else(phase == "Fasting", "Δ per fasting day", "Δ per refeeding day"),
+    dose_label = factor(dose_label, levels = c("Δ per fasting day", "Δ per refeeding day")),
+    domain = assign_domain_from_variable(Variable),
+    domain = factor(domain, levels = c("Lipid", "Metabolic / Organ", "Inflammation & iron", "Circulating immune cells", "Other")),
+    signif_star = if_else(is.na(signif_star) | signif_star == "ns", "", signif_star)
+  )
+
+# ---- manual marker order
+lme_int_all <- apply_manual_marker_order(lme_int_all, variable_col = "Variable")
+
+# ---- scaling
+lims_int <- range(lme_int_all$Estimate, na.rm = TRUE)
+
+signed_sqrt_trans <- scales::trans_new(
+  name = "signed_sqrt",
+  transform = function(x) sign(x) * sqrt(abs(x)),
+  inverse   = function(x) sign(x) * (abs(x)^2)
+)
+
+breaks_int <- c(round(lims_int[1], 2), 0, round(lims_int[2], 2))
+
+# ---- plot
+p_heat_int <- ggplot(lme_int_all, aes(x = dose_label, y = marker, fill = Estimate)) +
+  geom_tile(color = "grey92", linewidth = 0.25) +
+  geom_text(aes(label = signif_star), size = 4.7) +
+  facet_grid(
+    domain ~ phase,
+    scales = "free",
+    space  = "free_y",
+    switch = "y"
+  ) +
+  scale_y_discrete(expand = expansion(mult = 0.04)) +
+  scale_x_discrete(drop = TRUE, expand = expansion(mult = 0.04)) +
+  scale_fill_gradient2(
+    low = "#0f766e",
+    mid = "#ddd5c6",
+    high = "#f59e0b",
+    midpoint = 0,
+    limits = lims_int,
+    oob = scales::squish,
+    trans = signed_sqrt_trans,
+    breaks = breaks_int,
+    name = "Interaction β\n(Δ per day)"
+  ) +
+  labs(x = NULL, y = NULL) +
+  theme_bw() +
+  theme(
+    strip.placement = "outside",
+    strip.background = element_blank(),
+    strip.text.y.left = element_text(angle = 0, face = "bold", size = 11),
+    strip.text.x = element_text(face = "bold", size = 12),
+    panel.spacing.y = unit(0.5, "lines"),
+    panel.spacing.x = unit(0.5, "lines"),
+    panel.grid = element_blank(),
+    plot.margin = margin(5, 5, 5, 5),
+    axis.text.y = element_text(size = 10),
+    axis.text.x = element_text(size = 11),
+    legend.position = "right"
+  )
+
+p_heat_int
+
+# ---- save
+out_dir <- "C:/Users/megbi/Desktop/BA/Differential Blood Count Graphs/Master script 2.0/ResultsFigures"
+dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+
+ggsave(file.path(out_dir, "heatmap_LME_interaction_deltaPerDay_two_columns_fixedOrder.png"),
+       p_heat_int, width = 10.5, height = 10.5, dpi = 300)
+
+ggsave(file.path(out_dir, "heatmap_LME_interaction_deltaPerDay_two_columns_fixedOrder.pdf"),
+       p_heat_int, width = 10.5, height = 10.5)
+
+summary(lme_int_all$Estimate)
+```
+
+## 7) ANCOVA Additive Heatmap
+
+```{r ANOCVA-heatmap-additive, message=FALSE, warning=FALSE}
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(readr)
+  library(stringr)
+  library(scales)
+  library(forcats)
+})
+
+# ---- paths
+base_dir <- "C:/Users/megbi/Desktop/BA/Differential Blood Count Graphs/Master script 2.0/ModelTables"
+fast_main_path <- file.path(base_dir, "LM_fasting_ANCOVA_main_all_terms_T1onT0.csv")
+ref_main_path  <- file.path(base_dir, "LM_refeed_ANCOVA_centered_all_terms_T2onT1.csv")
+
+fast_main <- read_csv(fast_main_path, show_col_types = FALSE)
+ref_main  <- read_csv(ref_main_path,  show_col_types = FALSE)
+
+# ---- robust numeric parser
+to_num <- function(x) suppressWarnings(as.numeric(gsub(",", ".", trimws(as.character(x)))))
+
+# ---- additive-term extractor
+extract_additive <- function(df, phase_label, term_regex, predictor_label) {
+  df %>%
+    mutate(
+      Term = as.character(Term),
+      Variable = as.character(Variable),
+      Estimate = to_num(Estimate),
+      signif_star = as.character(`Signif.`)
+    ) %>%
+    filter(str_detect(Term, regex(term_regex, ignore_case = TRUE))) %>%
+    transmute(
+      Variable,
+      Term,
+      Estimate,
+      signif_star,
+      phase = phase_label,
+      predictor = predictor_label
+    )
+}
+
+# ---- extract additive predictors
+fast_bmi <- extract_additive(
+  fast_main,
+  phase_label = "Fasting",
+  term_regex = "^(?!.*(T0|T1|:|×|x\\s)).*\\bBMI\\b",
+  predictor_label = "BMI"
+)
+
+fast_dur <- extract_additive(
+  fast_main,
+  phase_label = "Fasting",
+  term_regex = "^(?!.*(T0|T1|:|×)).*(fast|fasting).*dur|\\bfast\\w*\\b",
+  predictor_label = "Fasting duration"
+)
+
+ref_bmi <- extract_additive(
+  ref_main,
+  phase_label = "Refeeding",
+  term_regex = "^(?!.*(T1|T2|:|×|x\\s)).*\\bBMI\\b",
+  predictor_label = "BMI"
+)
+
+ref_dur <- extract_additive(
+  ref_main,
+  phase_label = "Refeeding",
+  term_regex = "^(?!.*(T1|T2|:|×)).*(refeed|refeeding|FR|reintro).*dur|\\bFR\\b",
+  predictor_label = "Refeeding duration"
+)
+
+ref_diet <- extract_additive(
+  ref_main,
+  phase_label = "Refeeding",
+  term_regex = "^\\s*Diet\\s*:",
+  predictor_label = "Diet"
+)
+
+# ---- combine
+ancova_add <- bind_rows(fast_bmi, fast_dur, ref_bmi, ref_dur, ref_diet) %>%
+  distinct(Variable, phase, predictor, .keep_all = TRUE) %>%
+  filter(!is.na(Estimate)) %>%
+  mutate(
+    domain = assign_domain_from_variable(Variable),
+    domain = factor(
+      domain,
+      levels = c("Lipid", "Metabolic / Organ", "Inflammation & iron", "Circulating immune cells", "Other")
+    ),
+    phase = factor(phase, levels = c("Fasting", "Refeeding"))
+  )
+
+ancova_add <- bind_rows(fast_bmi, fast_dur, ref_bmi, ref_dur, ref_diet) %>%
+  distinct(Variable, phase, predictor, .keep_all = TRUE) %>%
+  filter(!is.na(Estimate)) %>%
+  mutate(
+    signif_star = case_when(
+      is.na(signif_star) ~ "",
+      signif_star == "ns" ~ "",
+      TRUE ~ signif_star
+    ),
+    domain = assign_domain_from_variable(Variable),
+    domain = factor(
+      domain,
+      levels = c("Lipid", "Metabolic / Organ", "Inflammation & iron", "Circulating immune cells", "Other")
+    ),
+    phase = factor(phase, levels = c("Fasting", "Refeeding"))
+  )
+
+# ---- manual marker order
+ancova_add <- apply_manual_marker_order(ancova_add, variable_col = "Variable")
+
+# ---- predictor order
+predictor_order <- c("BMI", "Fasting duration", "Refeeding duration", "Diet")
+
+ancova_add <- ancova_add %>%
+  mutate(predictor = factor(predictor, levels = predictor_order)) %>%
+  group_by(phase) %>%
+  mutate(predictor = fct_drop(predictor)) %>%
+  ungroup()
+
+lims <- range(ancova_add$Estimate, na.rm = TRUE)
+lims_pad <- c(lims[1], lims[2] + 1e-6)
+
+signed_sqrt_trans <- scales::trans_new(
+  name = "signed_sqrt",
+  transform = function(x) sign(x) * sqrt(abs(x)),
+  inverse   = function(x) sign(x) * (abs(x)^2)
+)
+
+breaks3 <- c(lims[1], 0, lims[2])
+labels3 <- c(round(lims[1], 2), 0, round(lims[2], 2))
+
+# ---- plot
+p_add_heat <- ggplot(ancova_add, aes(x = predictor, y = marker, fill = Estimate)) +
+  geom_tile(color = "grey92", linewidth = 0.25) +
+  geom_text(aes(label = signif_star), size = 4.7) +
+  facet_grid(
+    domain ~ phase,
+    scales = "free",
+    space = "free_y",
+    switch = "y"
+  ) +
+  scale_y_discrete(expand = expansion(mult = 0.04)) +
+  scale_x_discrete(drop = TRUE, expand = expansion(mult = 0.04)) +
+  scale_fill_gradient2(
+  low = "#0f766e",
+  mid = "#ddd5c6",
+  high = "#f59e0b",
+  midpoint = 0,
+  limits = lims_pad,
+  oob = scales::squish,
+  trans = signed_sqrt_trans,
+  breaks = breaks3,
+  labels = labels3,
+  name = "Additive β\n(model scale)"
+) +
+  labs(x = NULL, y = NULL) +
+  theme_bw() +
+  theme(
+    strip.placement = "outside",
+    strip.background = element_blank(),
+    strip.text.y.left = element_text(angle = 0, face = "bold", size = 11),
+    strip.text.x = element_text(face = "bold", size = 12),
+    panel.spacing.y = unit(0.5, "lines"),
+    panel.spacing.x = unit(0.5, "lines"),
+    panel.grid = element_blank(),
+    plot.margin = margin(5, 5, 5, 5),
+    axis.text.y = element_text(size = 10),
+    axis.text.x = element_text(size = 10),
+    legend.position = "right"
+  )
+
+p_add_heat
+
+# ---- save
+out_dir <- "C:/Users/megbi/Desktop/BA/Differential Blood Count Graphs/Master script 2.0/ResultsFigures"
+dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+
+ggsave(
+  file.path(out_dir, "heatmap_ANCOVA_additive_predictors_fixedOrder.png"),
+  p_add_heat, width = 12.5, height = 10.5, dpi = 300
+)
+
+ggsave(
+  file.path(out_dir, "heatmap_ANCOVA_additive_predictors_fixedOrder.pdf"),
+  p_add_heat, width = 12.5, height = 10.5
+)
+
+summary(ancova_add$Estimate)
+```
+
+## 8) ANCOVA Interaction Heatmap
+
+```{r ANCOVA-heatmap-hetero-fixedOrder, message=FALSE, warning=FALSE}
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(readr)
+  library(stringr)
+  library(scales)
+  library(forcats)
+  library(grid)
+})
+
+# ---- paths
+base_dir <- "C:/Users/megbi/Desktop/BA/Differential Blood Count Graphs/Master script 2.0/ModelTables"
+
+fast_bmi_path <- file.path(base_dir, "LM_fasting_ANCOVA_T0xBMI_all_terms_T1onT0.csv")
+fast_dur_path <- file.path(base_dir, "LM_fasting_ANCOVA_T0xFast_all_terms_T1onT0.csv")
+
+ref_bmi_path  <- file.path(base_dir, "LM_refeed_ANCOVA_T2onT1_BMIInteraction.csv")
+ref_dur_path  <- file.path(base_dir, "LM_refeed_ANCOVA_T2onT1_T1xFR_centered_all_terms.csv")
+ref_diet_path <- file.path(base_dir, "LM_refeed_ANCOVA_T2onT1_dietInteraction.csv")
+
+# ---- read data
+fast_bmi <- read_csv(fast_bmi_path, show_col_types = FALSE)
+fast_dur <- read_csv(fast_dur_path, show_col_types = FALSE)
+
+ref_bmi  <- read_csv(ref_bmi_path,  show_col_types = FALSE)
+ref_dur  <- read_csv(ref_dur_path,  show_col_types = FALSE)
+ref_diet <- read_csv(ref_diet_path, show_col_types = FALSE)
+
+# ---- robust numeric parser
+to_num <- function(x) suppressWarnings(as.numeric(gsub(",", ".", trimws(as.character(x)))))
+
+# ---- extractor
+extract_interaction <- function(df, phase, modulator, term_exact, term_regex_fallback = NULL) {
+  
+  df2 <- df %>%
+    mutate(
+      Term = as.character(Term),
+      Variable = as.character(Variable),
+      Estimate = to_num(Estimate),
+      signif_star = as.character(`Signif.`)
+    )
+  
+  out <- df2 %>% filter(Term == term_exact)
+  
+  if (nrow(out) == 0 && !is.null(term_regex_fallback)) {
+    out <- df2 %>%
+      filter(str_detect(Term, regex(term_regex_fallback, ignore_case = TRUE)))
+  }
+  
+  if (nrow(out) == 0) {
+    stop(
+      paste0(
+        "No rows found for phase='", phase, "', modulator='", modulator, "'.\n",
+        "Expected Term: '", term_exact, "'.\n",
+        "Available Terms:\n- ",
+        paste(unique(df2$Term), collapse = "\n- ")
+      )
+    )
+  }
+  
+  out %>%
+    transmute(
+      Variable,
+      Term,
+      Estimate,
+      signif_star,
+      phase = phase,
+      modulator = modulator
+    )
+}
+
+# ---- extract target interaction terms
+fast_int_bmi <- extract_interaction(
+  fast_bmi,
+  phase = "Fasting",
+  modulator = "BMI",
+  term_exact = "T0 × BMI (baseline dependency differs by BMI)",
+  term_regex_fallback = "T0\\s*[×x]\\s*BMI"
+)
+
+fast_int_dur <- extract_interaction(
+  fast_dur,
+  phase = "Fasting",
+  modulator = "Fasting duration",
+  term_exact = "T0 × fasting duration (baseline dependency differs by duration)",
+  term_regex_fallback = "T0\\s*[×x]\\s*fasting\\s*duration|T0\\s*[×x]\\s*Fast"
+)
+
+ref_int_bmi <- extract_interaction(
+  ref_bmi,
+  phase = "Refeeding",
+  modulator = "BMI",
+  term_exact = "T1 × BMI (baseline dependency differs by BMI)",
+  term_regex_fallback = "T1\\s*[×x]\\s*BMI"
+)
+
+ref_int_dur <- extract_interaction(
+  ref_dur,
+  phase = "Refeeding",
+  modulator = "Refeeding duration",
+  term_exact = "T1 × refeeding duration (baseline dependency mod.)",
+  term_regex_fallback = "T1\\s*[×x]\\s*refeeding\\s*duration|T1\\s*[×x]\\s*FR"
+)
+
+ref_int_diet <- extract_interaction(
+  ref_diet,
+  phase = "Refeeding",
+  modulator = "Diet",
+  term_exact = "T1 × Diet (baseline dependency differs by diet)",
+  term_regex_fallback = "T1\\s*[×x]\\s*Diet"
+)
+
+# ---- combine
+ancova_hetero <- bind_rows(
+  fast_int_bmi, fast_int_dur,
+  ref_int_bmi, ref_int_dur, ref_int_diet
+) %>%
+  filter(!is.na(Estimate)) %>%
+  mutate(
+    domain = assign_domain_from_variable(Variable),
+    domain = factor(
+      domain,
+      levels = c("Lipid", "Metabolic / Organ", "Inflammation & iron", "Circulating immune cells", "Other")
+    ),
+    phase = factor(phase, levels = c("Fasting", "Refeeding"))
+  )
+
+ancova_hetero <- bind_rows(
+  fast_int_bmi, fast_int_dur,
+  ref_int_bmi, ref_int_dur, ref_int_diet
+) %>%
+  filter(!is.na(Estimate)) %>%
+  mutate(
+    signif_star = case_when(
+      is.na(signif_star) ~ "",
+      str_trim(signif_star) == "ns" ~ "",
+      TRUE ~ signif_star
+    ),
+    domain = assign_domain_from_variable(Variable),
+    domain = factor(
+      domain,
+      levels = c("Lipid", "Metabolic / Organ", "Inflammation & iron", "Circulating immune cells", "Other")
+    ),
+    phase = factor(phase, levels = c("Fasting", "Refeeding"))
+  )
+
+
+# ---- manual marker order
+ancova_hetero <- apply_manual_marker_order(ancova_hetero, variable_col = "Variable")
+
+# ---- phase-specific x-axis labels
+ancova_hetero <- ancova_hetero %>%
+  mutate(
+    modulator = factor(modulator, levels = c("BMI", "Fasting duration", "Refeeding duration", "Diet")),
+    modulator_label = case_when(
+      phase == "Fasting"   & modulator == "BMI"                ~ "T0 × BMI",
+      phase == "Fasting"   & modulator == "Fasting duration"   ~ "T0 ×\nFasting duration",
+      phase == "Refeeding" & modulator == "BMI"                ~ "T1 × BMI",
+      phase == "Refeeding" & modulator == "Refeeding duration" ~ "T1 ×\nRefeeding duration",
+      phase == "Refeeding" & modulator == "Diet"               ~ "T1 × Diet",
+      TRUE ~ as.character(modulator)
+    )
+  ) %>%
+  group_by(phase) %>%
+  mutate(modulator_label = factor(modulator_label, levels = unique(modulator_label))) %>%
+  ungroup()
+
+# ---- scaling: actual observed min/max
+lims <- range(ancova_hetero$Estimate, na.rm = TRUE)
+
+signed_sqrt_trans <- scales::trans_new(
+  name = "signed_sqrt",
+  transform = function(x) sign(x) * sqrt(abs(x)),
+  inverse   = function(x) sign(x) * (abs(x)^2)
+)
+
+breaks3 <- c(round(lims[1], 2), 0, round(lims[2], 2))
+
+# ---- plot
+p_hetero_heat <- ggplot(ancova_hetero, aes(x = modulator_label, y = marker, fill = Estimate)) +
+  geom_tile(color = "grey92", linewidth = 0.25) +
+  geom_text(aes(label = signif_star), size = 4.7) +
+  facet_grid(
+    domain ~ phase,
+    scales = "free",
+    space = "free_y",
+    switch = "y"
+  ) +
+  scale_y_discrete(expand = expansion(mult = 0.04)) +
+  scale_x_discrete(drop = TRUE, expand = expansion(mult = 0.08)) +
+  scale_fill_gradient2(
+    low = "#0f766e",
+    mid = "#ddd5c6",
+    high = "#f59e0b",
+    midpoint = 0,
+    limits = lims,
+    oob = scales::squish,
+    trans = signed_sqrt_trans,
+    breaks = breaks3,
+    name = "Interaction β\n(model scale)"
+  ) +
+  labs(x = NULL, y = NULL) +
+  theme_bw() +
+  theme(
+    strip.placement = "outside",
+    strip.background = element_blank(),
+    strip.text.y.left = element_text(angle = 0, face = "bold", size = 11),
+    strip.text.x = element_text(face = "bold", size = 12),
+    panel.spacing.x = unit(0.8, "lines"),
+    panel.spacing.y = unit(0.5, "lines"),
+    panel.grid = element_blank(),
+    plot.margin = margin(5, 12, 5, 5),
+    axis.text.y = element_text(size = 10),
+    axis.text.x = element_text(size = 9, lineheight = 0.9, margin = margin(t = 4)),
+    legend.position = "right"
+  )
+
+p_hetero_heat
+
+# ---- save
+out_dir <- "C:/Users/megbi/Desktop/BA/Differential Blood Count Graphs/Master script 2.0/ResultsFigures"
+dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+
+ggsave(
+  file.path(out_dir, "heatmap_ANCOVA_heterogeneity_interactions_fixedOrder.png"),
+  p_hetero_heat, width = 12.5, height = 10.5, dpi = 300
+)
+
+ggsave(
+  file.path(out_dir, "heatmap_ANCOVA_heterogeneity_interactions_fixedOrder.pdf"),
+  p_hetero_heat, width = 12.5, height = 10.5
+)
+
+summary(ancova_hetero$Estimate)
+```
+
+## 12) Immune-inflammatory indices graph
+
+```{r immune-indices-all-in-one, message=FALSE, warning=FALSE}
+# ============================================================
+# Immune indices: calculate ratios, fit LME phase contrasts,
+# output results table, and plot trajectories with significance
+# ============================================================
+
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(tidyr)
+  library(ggplot2)
+  library(lme4)
+  library(lmerTest)
+  library(emmeans)
+  library(knitr)
+  library(kableExtra)
+  library(readr)
+})
+
+# -----------------------------
+# Settings
+# -----------------------------
+min_n <- 20
+index_vars <- c("LMR (ratio)", "NLR (ratio)", "PLR (ratio)", "SII (a.u.)")
+
+
+# ============================================================
+# 1. Calculate immune indices from absolute counts
+# ============================================================
+
+# Keep only the markers needed for index calculation
+idx_source <- FF_laboratory_master %>%
+  filter(
+    variable %in% c(
+      "Lymphocytes abs. (Tsd./µl)",
+      "Monocytes abs. (Tsd./µl)",
+      "Neutrophils abs. (Tsd./µl)",
+      "Platelets (Tsd./µl)"
+    ),
+    timepoint %in% c("T0", "T1", "T2")
+  ) %>%
+  group_by(study_id, variable, timepoint) %>%
+  slice_min(datetime, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  transmute(
+    study_id,
+    timepoint = factor(timepoint, levels = c("T0", "T1", "T2")),
+    datetime,
+    variable,
+    value = suppressWarnings(as.numeric(value)),
+    age = suppressWarnings(as.numeric(age)),
+    sex = factor(sex, levels = c("F", "M")),
+    BMI_baseline = suppressWarnings(as.numeric(BMI_baseline))
+  )
+
+# Pivot wide for ratio calculation
+idx_wide <- idx_source %>%
+  select(study_id, timepoint, datetime, variable, value, age, sex, BMI_baseline) %>%
+  pivot_wider(
+    names_from = variable,
+    values_from = value
+  )
+
+# Calculate indices using absolute counts
+immune_indices_long <- idx_wide %>%
+  mutate(
+    `LMR (ratio)` = `Lymphocytes abs. (Tsd./µl)` / `Monocytes abs. (Tsd./µl)`,
+    `NLR (ratio)` = `Neutrophils abs. (Tsd./µl)` / `Lymphocytes abs. (Tsd./µl)`,
+    `PLR (ratio)` = `Platelets (Tsd./µl)` / `Lymphocytes abs. (Tsd./µl)`,
+    `SII (a.u.)`  = (`Platelets (Tsd./µl)` * `Neutrophils abs. (Tsd./µl)`) / `Lymphocytes abs. (Tsd./µl)`
+  ) %>%
+  mutate(
+    across(all_of(index_vars), ~ ifelse(is.finite(.x) & .x > 0, .x, NA_real_))
+  ) %>%
+  select(
+    study_id, timepoint, datetime, age, sex, BMI_baseline,
+    all_of(index_vars)
+  ) %>%
+  pivot_longer(
+    cols = all_of(index_vars),
+    names_to = "index",
+    values_to = "value"
+  ) %>%
+  filter(!is.na(value), value > 0)
+
+# Optional quick check
+immune_index_counts <- immune_indices_long %>%
+  count(index, timepoint)
+
+print(immune_index_counts)
+
+# ============================================================
+# 2. LME phase-specific inference (T1-T0, T2-T1)
+# ============================================================
+
+fit_one_index <- function(df, idx_name) {
+
+  d <- df %>%
+    filter(index == idx_name) %>%
+    filter(!is.na(value), value > 0) %>%
+    filter(!is.na(age), !is.na(sex), !is.na(BMI_baseline))
+
+  n_subj <- n_distinct(d$study_id)
+
+  if (n_subj < min_n) {
+    return(tibble(
+      index = idx_name,
+      Phase = c("Fasting", "Refeeding"),
+      ratio = NA_real_,
+      pct_change = NA_real_,
+      ratio_ci_low = NA_real_,
+      ratio_ci_high = NA_real_,
+      p_raw = NA_real_,
+      n_subjects = n_subj
+    ))
+  }
+
+  d <- d %>%
+    mutate(
+      age_c = age - mean(age, na.rm = TRUE),
+      BMI_c = BMI_baseline - mean(BMI_baseline, na.rm = TRUE),
+      y = log(value)
+    )
+
+  fit <- lmer(y ~ timepoint + age_c + sex + BMI_c + (1 | study_id), data = d)
+
+  em <- emmeans(fit, ~ timepoint)
+
+  ctr <- contrast(
+    em,
+    method = list(
+      "Fasting"   = c(-1,  1,  0),  # T1 - T0
+      "Refeeding" = c( 0, -1,  1)   # T2 - T1
+    ),
+    adjust = "none"
+  )
+
+  ctr_df <- as.data.frame(summary(ctr, infer = c(TRUE, TRUE)))
+
+  # robust CI naming across emmeans versions
+  if (!("lower.CL" %in% names(ctr_df)) && ("asymp.LCL" %in% names(ctr_df))) {
+    ctr_df <- ctr_df %>% rename(lower.CL = asymp.LCL, upper.CL = asymp.UCL)
+  }
+  if (!("lower.CL" %in% names(ctr_df))) ctr_df$lower.CL <- NA_real_
+  if (!("upper.CL" %in% names(ctr_df))) ctr_df$upper.CL <- NA_real_
+
+  ctr_df %>%
+    transmute(
+      index = idx_name,
+      Phase = contrast,
+      ratio = exp(estimate),
+      pct_change = (exp(estimate) - 1) * 100,
+      ratio_ci_low = exp(lower.CL),
+      ratio_ci_high = exp(upper.CL),
+      p_raw = p.value,
+      n_subjects = n_subj
+    )
+}
+
+phase_res <- bind_rows(lapply(index_vars, function(idx) fit_one_index(immune_indices_long, idx))) %>%
+  mutate(p_fdr = p.adjust(p_raw, method = "BH"))
+
+# Pretty results table
+results_pretty <- phase_res %>%
+  mutate(
+    Index = case_match(index,
+  "LMR (ratio)" ~ "LMR", "NLR (ratio)" ~ "NLR",
+  "PLR (ratio)" ~ "PLR", "SII (a.u.)"  ~ "SII (a.u.)",
+  .default = index),
+    `% change` = round(pct_change, 1),
+    `95% CI (post/pre)` = ifelse(
+      is.na(ratio_ci_low) | is.na(ratio_ci_high),
+      NA_character_,
+      paste0("[", round(ratio_ci_low, 3), ", ", round(ratio_ci_high, 3), "]")
+    ),
+    `P (raw)` = fmt_p(p_raw),
+    `P (FDR)` = fmt_p(p_fdr),
+    `Signif.` = p_stars(p_fdr)
+  ) %>%
+  select(
+    Index,
+    Phase,
+    `% change`,
+    `95% CI (post/pre)`,
+    `P (raw)`,
+    `P (FDR)`,
+    `Signif.`,
+    `n (subjects)` = n_subjects
+  ) %>%
+  arrange(Index, factor(Phase, levels = c("Fasting", "Refeeding")))
+
+results_pretty %>%
+  kbl(
+    caption = "Phase-specific changes of immune indices. LME on log(index) with covariates.",
+    align = "l"
+  ) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE) %>%
+  scroll_box(width = "100%", height = "520px")
+
+# Save results table
+dir.create("ModelTables", showWarnings = FALSE)
+write_csv(results_pretty, "ModelTables/LME_immune_indices_phase_table_T1T0_T2T1.csv")
+
+# ============================================================
+# 3. Plot means ± 95% CI with significance brackets
+# ============================================================
+
+plot_df <- immune_indices_long %>%
+  group_by(index, timepoint) %>%
+  summarise(
+    n = sum(!is.na(value)),
+    mean = mean(value, na.rm = TRUE),
+    sd = sd(value, na.rm = TRUE),
+    se = sd / sqrt(n),
+    ci_low = mean - 1.96 * se,
+    ci_high = mean + 1.96 * se,
+    .groups = "drop"
+  ) %>%
+  mutate(
+    Index = case_match(index,
+  "LMR (ratio)" ~ "LMR", "NLR (ratio)" ~ "NLR",
+  "PLR (ratio)" ~ "PLR", "SII (a.u.)"  ~ "SII (a.u.)",
+  .default = index),
+    Timepoint = factor(timepoint, levels = c("T0", "T1", "T2"))
+  )
+
+sig_df <- phase_res %>%
+  mutate(
+    Index = case_match(index,
+  "LMR (ratio)" ~ "LMR", "NLR (ratio)" ~ "NLR",
+  "PLR (ratio)" ~ "PLR", "SII (a.u.)"  ~ "SII (a.u.)",
+  .default = index),
+    stars = case_when(
+      is.na(p_fdr) ~ "",
+      p_fdr < 0.001 ~ "☆☆☆",
+      p_fdr < 0.01  ~ "☆☆",
+      p_fdr < 0.05  ~ "☆",
+      TRUE ~ "ns"
+    ),
+    x_start = case_when(
+      Phase == "Fasting" ~ 1,
+      Phase == "Refeeding" ~ 2
+    ),
+    x_end = case_when(
+      Phase == "Fasting" ~ 2,
+      Phase == "Refeeding" ~ 3
+    )
+  )
+
+panel_heights <- plot_df %>%
+  group_by(Index) %>%
+  summarise(
+    ymax = max(ci_high, na.rm = TRUE),
+    ymin = min(ci_low, na.rm = TRUE),
+    yrange = ymax - ymin,
+    .groups = "drop"
+  )
+
+sig_df <- sig_df %>%
+  left_join(panel_heights, by = "Index") %>%
+  mutate(
+    bracket_y = case_when(
+      Phase == "Fasting"   ~ ymax + 0.10 * yrange,
+      Phase == "Refeeding" ~ ymax + 0.22 * yrange
+    ),
+    label_y = bracket_y + 0.04 * yrange,
+    tip_y = bracket_y - 0.03 * yrange
+  )
+
+p <- ggplot(plot_df, aes(x = Timepoint, y = mean, group = 1)) +
+  geom_line(color = "black") +
+  geom_point(size = 2.8, color = "black") +
+  geom_errorbar(aes(ymin = ci_low, ymax = ci_high), width = 0.08) +
+  facet_wrap(~ Index, scales = "free_y") +
+  geom_segment(
+    data = sig_df,
+    aes(x = x_start, xend = x_end, y = bracket_y, yend = bracket_y),
+    inherit.aes = FALSE
+  ) +
+  geom_segment(
+    data = sig_df,
+    aes(x = x_start, xend = x_start, y = bracket_y, yend = tip_y),
+    inherit.aes = FALSE
+  ) +
+  geom_segment(
+    data = sig_df,
+    aes(x = x_end, xend = x_end, y = bracket_y, yend = tip_y),
+    inherit.aes = FALSE
+  ) +
+  geom_text(
+    data = sig_df,
+    aes(x = (x_start + x_end) / 2, y = label_y, label = stars),
+    inherit.aes = FALSE,
+    size = 3.2
+  ) +
+  labs(
+    x = "Timepoint",
+    y = "Mean ± 95% CI"
+  ) +
+  theme_bw(base_size = 12) +
+  theme(
+    strip.background = element_rect(fill = "grey85"),
+    strip.text = element_text(face = "bold"),
+    axis.title.x = element_text(margin = margin(t = 8)),
+    axis.title.y = element_text(margin = margin(r = 8))
+  )
+
+p
+
+# Save figure
+dir.create("Figures", showWarnings = FALSE)
+ggsave("Figures/immune_indices_trajectory.pdf", plot = p, width = 8, height = 6, units = "in")
+ggsave("Figures/immune_indices_trajectory.png", plot = p, width = 8, height = 6, units = "in", dpi = 600)
+
+# descriptive II graph numbers
+immune_index_descriptives <- plot_df %>%
+  select(Index, Timepoint, n, mean, ci_low, ci_high) %>%
+  mutate(
+    mean = round(mean, 2),
+    ci_low = round(ci_low, 2),
+    ci_high = round(ci_high, 2),
+    `Mean ± 95% CI` = paste0(mean, " [", ci_low, ", ", ci_high, "]")
+  ) %>%
+  select(Index, Timepoint, n, `Mean ± 95% CI`, mean, ci_low, ci_high) %>%
+  arrange(Index, Timepoint)
+
+print(immune_index_descriptives)
+immune_index_descriptives %>%
+  knitr::kable(
+    caption = "Descriptive summary of immune redistribution indices by timepoint.",
+    align = "lcccccc"
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover"),
+    full_width = FALSE
+  )
+
+write_csv(
+  immune_index_descriptives,
+  "ModelTables/immune_indices_descriptive_mean_ci_n.csv"
+)
+```
+
+## 13) Immune indices diet heterogeneity
+
+```{r immune-refeed, message=FALSE, warning=FALSE}
+## ============================================================
+## X) Immune indices and refeeding (T1 -> T2) by diet
+## - Computes indices from absolute counts (earliest per subject/timepoint)
+## - Builds refeeding dataset (T1, T2)
+## - Plots T1 vs Δ Index (T2 - T1) by diet in a 2x2 panel
+## - Panel order matches the average trajectories graph:
+##   LMR, NLR, PLR, SII (a.u.)
+## ============================================================
+
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(tidyr)
+  library(ggplot2)
+})
+
+## -------------------------
+## 0) Inputs
+## -------------------------
+index_vars_needed <- c(
+  "Neutrophils abs. (Tsd./µl)",
+  "Lymphocytes abs. (Tsd./µl)",
+  "Monocytes abs. (Tsd./µl)",
+  "Platelets (Tsd./µl)"
+)
+
+panel_order <- c("LMR", "NLR", "PLR", "SII (a.u.)")
+
+index_ranges <- tibble::tribble(
+  ~Index,        ~xmin,  ~xmax,
+  "LMR",           3.0,   5.5,
+  "NLR",           1.0,   3.0,
+  "PLR",         80.0, 160.0,
+  "SII (a.u.)",  300.0, 700.0
+)
+
+## -------------------------
+## 1) Build wide table of components (earliest per subject/timepoint)
+## -------------------------
+index_wide <- FF_laboratory_master %>%
+  filter(
+    timepoint %in% c("T0", "T1", "T2"),
+    variable %in% index_vars_needed
+  ) %>%
+  group_by(study_id, timepoint, variable) %>%
+  slice_min(datetime, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  select(
+    study_id, sex, timepoint, datetime,
+    fasting_duration_measured, FR_duration,
+    age, BMI_baseline, diet_keto,
+    variable, value
+  ) %>%
+  pivot_wider(names_from = variable, values_from = value)
+
+## -------------------------
+## 2) Compute indices safely
+## -------------------------
+indexes_long <- index_wide %>%
+    mutate(
+        NLR = if_else(
+            !is.na(`Neutrophils abs. (Tsd./µl)`) &
+                !is.na(`Lymphocytes abs. (Tsd./µl)`) &
+                `Lymphocytes abs. (Tsd./µl)` > 0,
+            `Neutrophils abs. (Tsd./µl)` / `Lymphocytes abs. (Tsd./µl)`,
+            NA_real_
+        ),
+        PLR = if_else(
+            !is.na(`Platelets (Tsd./µl)`) &
+                !is.na(`Lymphocytes abs. (Tsd./µl)`) &
+                `Lymphocytes abs. (Tsd./µl)` > 0,
+            `Platelets (Tsd./µl)` / `Lymphocytes abs. (Tsd./µl)`,
+            NA_real_
+        ),
+        LMR = if_else(
+            !is.na(`Lymphocytes abs. (Tsd./µl)`) &
+                !is.na(`Monocytes abs. (Tsd./µl)`) &
+                `Monocytes abs. (Tsd./µl)` > 0,
+            `Lymphocytes abs. (Tsd./µl)` / `Monocytes abs. (Tsd./µl)`,
+            NA_real_
+        ),
+        SII = if_else(
+            !is.na(`Platelets (Tsd./µl)`) &
+                !is.na(`Neutrophils abs. (Tsd./µl)`) &
+                !is.na(`Lymphocytes abs. (Tsd./µl)`) &
+                `Lymphocytes abs. (Tsd./µl)` > 0,
+            `Platelets (Tsd./µl)` * `Neutrophils abs. (Tsd./µl)` / `Lymphocytes abs. (Tsd./µl)`,
+            NA_real_
+        )
+    ) %>%
+    select(
+        study_id, sex, timepoint, datetime,
+        fasting_duration_measured, FR_duration,
+        age, BMI_baseline, diet_keto,
+        NLR, PLR, LMR, SII
+    ) %>%
+    pivot_longer(
+        cols = c(LMR, NLR, PLR, SII),
+        names_to = "Index",
+        values_to = "value"
+    ) %>%
+    mutate(
+        Index = dplyr::recode(
+            Index,
+            LMR = "LMR",
+            NLR = "NLR",
+            PLR = "PLR",
+            SII = "SII (a.u.)"
+        ),
+        Index = factor(Index, levels = panel_order)
+    )
+
+## Optional: bind into master if you still want that in your workflow
+FF_laboratory_master <- bind_rows(
+  FF_laboratory_master,
+  indexes_long %>%
+    transmute(
+      study_id, sex, timepoint, datetime,
+      fasting_duration_measured, FR_duration,
+      age, BMI_baseline, diet_keto,
+      variable = as.character(Index),
+      value
+    )
+)
+
+## -------------------------
+## 3) Refeeding dataset (T1, T2) with diet
+## -------------------------
+delta_indexes_refeed <- indexes_long %>%
+  filter(!is.na(diet_keto)) %>%
+  filter(timepoint %in% c("T1", "T2")) %>%
+  group_by(study_id, Index, timepoint) %>%
+  slice_min(datetime, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  pivot_wider(
+    id_cols = c(study_id, Index, sex, age, BMI_baseline, diet_keto, FR_duration),
+    names_from = timepoint,
+    values_from = value
+  ) %>%
+  mutate(
+    delta_T2_T1 = T2 - T1,
+    diet_keto = factor(diet_keto)
+  ) %>%
+  filter(!is.na(T1), !is.na(T2))
+
+## n subjects per index
+n_refeed_by_var <- delta_indexes_refeed %>%
+  group_by(Index) %>%
+  summarise(n_subjects = n_distinct(study_id), .groups = "drop")
+
+print(n_refeed_by_var)
+
+## -------------------------
+## 4) Healthy band panel plot: T1 vs Δ Index (T2 - T1) by diet
+## -------------------------
+p_refeed_indices_panel <- ggplot(
+  delta_indexes_refeed,
+  aes(x = T1, y = delta_T2_T1, color = diet_keto)
+) +
+  geom_rect(
+    data = index_ranges,
+    aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf),
+    inherit.aes = FALSE,
+    fill = "darkseagreen3",
+    alpha = 0.45
+  ) +
+  geom_point(alpha = 0.6, size = 1.8) +
+  geom_smooth(method = "lm", se = TRUE, linewidth = 0.8) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  facet_wrap(~ Index, scales = "free", ncol = 2) +
+  labs(
+    x = "Index at end of fasting (T1)",
+    y = expression(Delta~"Index (T2 - T1)"),
+    color = "Diet"
+  ) +
+  theme_bw(base_size = 12) +
+  theme(
+    strip.background = element_rect(fill = "grey85"),
+    strip.text = element_text(face = "bold"),
+    axis.title.x = element_text(margin = margin(t = 8)),
+    axis.title.y = element_text(margin = margin(r = 8))
+  )
+
+p_refeed_indices_panel
+
+## -------------------------
+## 5) Save figure
+## -------------------------
+dir.create("Figures", showWarnings = FALSE)
+
+ggsave(
+  "Figures/refeeding_immune_indices_by_diet_panel.pdf",
+  plot = p_refeed_indices_panel,
+  width = 8,
+  height = 6,
+  units = "in"
+)
+
+ggsave(
+  "Figures/refeeding_immune_indices_by_diet_panel.png",
+  plot = p_refeed_indices_panel,
+  width = 8,
+  height = 6,
+  units = "in",
+  dpi = 600
+)
+
+## ============================================================
+## X) Immune indices and refeeding (T1 -> T2): ANCOVA models
+## - Additive model:    log(T2) ~ T1_c + diet + FR + age + sex + BMI
+## - Interaction model: log(T2) ~ T1_c * diet + FR + age + sex + BMI
+## - Uses explicit complete-case filtering
+## ============================================================
+
+## -------------------------
+## 1) Analysis dataset
+## -------------------------
+ii_refeed_ancova_df <- delta_indexes_refeed %>%
+  filter(!is.na(T1), !is.na(T2)) %>%
+  mutate(
+    diet_keto = factor(diet_keto, levels = c("Non-Keto", "Keto"))
+  ) %>%
+  filter(T1 > 0, T2 > 0) %>%
+  mutate(
+    T1_log = log(T1),
+    T2_log = log(T2),
+    T1_c  = as.numeric(scale(T1_log, center = TRUE, scale = FALSE)),
+    age_c = as.numeric(scale(age, center = TRUE, scale = FALSE)),
+    BMI_c = as.numeric(scale(BMI_baseline, center = TRUE, scale = FALSE)),
+    FR_c  = as.numeric(scale(FR_duration, center = TRUE, scale = FALSE))
+  ) %>%
+  drop_na(T1_c, T2_log, diet_keto, age_c, sex, BMI_c, FR_c)
+
+## sanity check
+dropped_refeed <- delta_indexes_refeed %>%
+  summarise(
+    n_total = n(),
+    n_nonpos = sum((!is.na(T1) & T1 <= 0) | (!is.na(T2) & T2 <= 0), na.rm = TRUE)
+  )
+
+print(dropped_refeed)
+
+n_refeed_model <- ii_refeed_ancova_df %>%
+  group_by(Index) %>%
+  summarise(n_subjects = n_distinct(study_id), .groups = "drop")
+
+print(n_refeed_model)
+
+## -------------------------
+## 2) Additive ANCOVA
+##    log(T2) ~ T1_c + diet + FR + age + sex + BMI
+## -------------------------
+ii_refeed_additive_results <- ii_refeed_ancova_df %>%
+  group_by(Index) %>%
+  group_modify(~{
+    df <- .x
+
+    fit <- lm(
+      T2_log ~ T1_c + diet_keto + age_c + sex + BMI_c + FR_c,
+      data = df
+    )
+
+    broom::tidy(fit, conf.int = TRUE) %>%
+      filter(term %in% c("T1_c", "diet_ketoKeto", "FR_c", "age_c", "sexM", "BMI_c")) %>%
+      mutate(
+        n_rows = nrow(df),
+        n_subjects = n_distinct(df$study_id)
+      )
+  }) %>%
+  ungroup()
+
+ii_refeed_additive_table <- ii_refeed_additive_results %>%
+  group_by(term) %>%
+  mutate(
+    p_raw = p.value,
+    p_fdr = p.adjust(p_raw, method = "BH")
+  ) %>%
+  ungroup() %>%
+  mutate(
+    Term = dplyr::recode(
+      term,
+      T1_c = "End of fasting (T1), centered",
+      diet_ketoKeto = "Diet: Keto (vs Non-Keto)",
+      FR_c = "Refeeding duration, centered",
+      age_c = "Age, centered",
+      sexM = "Sex: Male (vs Female)",
+      BMI_c = "Baseline BMI, centered"
+    ),
+    Estimate = round(estimate, 3),
+    SE = round(std.error, 3),
+    `95% CI` = paste0("[", round(conf.low, 3), ", ", round(conf.high, 3), "]"),
+    `P (raw)` = fmt_p(p_raw),
+    `P (FDR)` = fmt_p(p_fdr),
+    `Signif.` = p_stars(p_fdr)
+  ) %>%
+  select(
+    Index,
+    Term,
+    Estimate,
+    SE,
+    `95% CI`,
+    `P (raw)`,
+    `P (FDR)`,
+    `Signif.`,
+    n_subjects
+  ) %>%
+  arrange(
+    factor(Index, levels = c("LMR", "NLR", "PLR", "SII (a.u.)")),
+    factor(
+      Term,
+      levels = c(
+        "End of fasting (T1), centered",
+        "Diet: Keto (vs Non-Keto)",
+        "Refeeding duration, centered",
+        "Baseline BMI, centered",
+        "Age, centered",
+        "Sex: Male (vs Female)"
+      )
+    )
+  )
+
+print(ii_refeed_additive_table, n = 24)
+
+ii_refeed_additive_table %>%
+  kbl(
+    caption = "Refeeding ANCOVA for immune indices: additive model.",
+    align = "l"
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover"),
+    full_width = FALSE
+  )
+
+## -------------------------
+## 3) Diet-interaction ANCOVA
+##    log(T2) ~ T1_c * diet + FR + age + sex + BMI
+## -------------------------
+ii_refeed_interaction_results <- ii_refeed_ancova_df %>%
+  group_by(Index) %>%
+  group_modify(~{
+    df <- .x
+
+    fit <- lm(
+      T2_log ~ T1_c * diet_keto + age_c + sex + BMI_c + FR_c,
+      data = df
+    )
+
+    broom::tidy(fit, conf.int = TRUE) %>%
+      filter(term %in% c("T1_c", "diet_ketoKeto", "T1_c:diet_ketoKeto", "FR_c", "age_c", "sexM", "BMI_c")) %>%
+      mutate(
+        n_rows = nrow(df),
+        n_subjects = n_distinct(df$study_id)
+      )
+  }) %>%
+  ungroup()
+
+ii_refeed_interaction_table <- ii_refeed_interaction_results %>%
+  group_by(term) %>%
+  mutate(
+    p_raw = p.value,
+    p_fdr = p.adjust(p_raw, method = "BH")
+  ) %>%
+  ungroup() %>%
+  mutate(
+    Term = dplyr::recode(
+      term,
+      T1_c = "End of fasting (T1), centered",
+      diet_ketoKeto = "Diet: Keto (vs Non-Keto)",
+      `T1_c:diet_ketoKeto` = "T1 × Diet (baseline dependency differs by diet)",
+      FR_c = "Refeeding duration, centered",
+      age_c = "Age, centered",
+      sexM = "Sex: Male (vs Female)",
+      BMI_c = "Baseline BMI, centered"
+    ),
+    Estimate = round(estimate, 3),
+    SE = round(std.error, 3),
+    `95% CI` = paste0("[", round(conf.low, 3), ", ", round(conf.high, 3), "]"),
+    `P (raw)` = fmt_p(p_raw),
+    `P (FDR)` = fmt_p(p_fdr),
+    `Signif.` = p_stars(p_fdr)
+  ) %>%
+  select(
+    Index,
+    Term,
+    Estimate,
+    SE,
+    `95% CI`,
+    `P (raw)`,
+    `P (FDR)`,
+    `Signif.`,
+    n_subjects
+  ) %>%
+  arrange(
+    factor(Index, levels = c("LMR", "NLR", "PLR", "SII (a.u.)")),
+    factor(
+      Term,
+      levels = c(
+        "T1 × Diet (baseline dependency differs by diet)",
+        "End of fasting (T1), centered",
+        "Diet: Keto (vs Non-Keto)",
+        "Refeeding duration, centered",
+        "Baseline BMI, centered",
+        "Age, centered",
+        "Sex: Male (vs Female)"
+      )
+    )
+  )
+
+print(ii_refeed_interaction_table, n = 28)
+
+ii_refeed_interaction_table %>%
+  kbl(
+    caption = "Refeeding ANCOVA for immune indices: diet-interaction model.",
+    align = "l"
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover"),
+    full_width = FALSE
+  )
+
+## -------------------------
+## 4) Save tables
+## -------------------------
+dir.create("ModelTables", showWarnings = FALSE)
+
+write_csv(
+  ii_refeed_additive_table,
+  "ModelTables/ANCOVA_refeed_immune_indices_additive.csv"
+)
+
+write_csv(
+  ii_refeed_interaction_table,
+  "ModelTables/ANCOVA_refeed_immune_indices_diet_interaction.csv"
+)
+```
+
+## 14) Baseline Inflammation and metabolic health
+
+```{r Baseline Inflammation, message=FALSE, warning=FALSE}
+# =========================================================
+# Question:
+# Does baseline CRP predict fasting-endpoint (T1) metabolic markers,
+# adjusted for T0 and covariates?
+# =========================================================
+center_only <- function(x) {
+  x - mean(x, na.rm = TRUE)
+}
+
+# -------------------------
+# 1) Build baseline CRP predictor (T0)
+# -------------------------
+crp_T0 <- FF_laboratory_master %>%
+  dplyr::filter(timepoint == "T0", variable == "CRP (mg/l)") %>%
+  dplyr::group_by(study_id) %>%
+  dplyr::slice_min(datetime, n = 1, with_ties = FALSE) %>%
+  dplyr::ungroup() %>%
+  dplyr::transmute(
+    study_id,
+    CRP_T0 = value,
+    CRP_T0_log = safe_log(value)
+  ) %>%
+  dplyr::filter(!is.na(CRP_T0_log)) %>%
+  dplyr::mutate(
+    CRP_T0_z = as.numeric(scale(CRP_T0_log))
+  )
+
+# -------------------------
+# 2) Build T0/T1 metabolic dataset
+# -------------------------
+met_vars_needed <- c(
+  "Serum Glucose (mg/dl)",
+  "Insulin (mIU/l)",
+  "Triglycerides (mg/dl)",
+  "HDL-C (mg/dl)",
+  "LDL-C (mg/dl)",
+  "Non-HDL Cholesterol (mg/dl)"
+)
+
+met_T0T1_wide <- FF_laboratory_master %>%
+  dplyr::filter(timepoint %in% c("T0", "T1"), variable %in% met_vars_needed) %>%
+  dplyr::group_by(study_id, timepoint, variable) %>%
+  dplyr::slice_min(datetime, n = 1, with_ties = FALSE) %>%
+  dplyr::ungroup() %>%
+  dplyr::select(
+    study_id, timepoint, variable, value,
+    age, sex, BMI_baseline, fasting_duration_measured
+  ) %>%
+  tidyr::pivot_wider(names_from = variable, values_from = value) %>%
+  tidyr::pivot_wider(
+    names_from = timepoint,
+    values_from = c(
+      `Serum Glucose (mg/dl)`,
+      `Insulin (mIU/l)`,
+      `Triglycerides (mg/dl)`,
+      `HDL-C (mg/dl)`,
+      `LDL-C (mg/dl)`,
+      `Non-HDL Cholesterol (mg/dl)`
+    )
+  ) %>%
+  dplyr::mutate(
+    # Rename raw markers
+    Glucose_T0 = `Serum Glucose (mg/dl)_T0`,
+    Glucose_T1 = `Serum Glucose (mg/dl)_T1`,
+    Insulin_T0 = `Insulin (mIU/l)_T0`,
+    Insulin_T1 = `Insulin (mIU/l)_T1`,
+    TG_T0      = `Triglycerides (mg/dl)_T0`,
+    TG_T1      = `Triglycerides (mg/dl)_T1`,
+    HDL_T0     = `HDL-C (mg/dl)_T0`,
+    HDL_T1     = `HDL-C (mg/dl)_T1`,
+    LDL_T0     = `LDL-C (mg/dl)_T0`,
+    LDL_T1     = `LDL-C (mg/dl)_T1`,
+    nonHDL_T0  = `Non-HDL Cholesterol (mg/dl)_T0`,
+    nonHDL_T1  = `Non-HDL Cholesterol (mg/dl)_T1`,
+
+    # Derived indices
+    TyG_T0 = ifelse(!is.na(TG_T0) & !is.na(Glucose_T0) & TG_T0 > 0 & Glucose_T0 > 0,
+                    log((TG_T0 * Glucose_T0) / 2), NA_real_),
+    TyG_T1 = ifelse(!is.na(TG_T1) & !is.na(Glucose_T1) & TG_T1 > 0 & Glucose_T1 > 0,
+                    log((TG_T1 * Glucose_T1) / 2), NA_real_),
+
+    AIP_T0 = ifelse(!is.na(TG_T0) & !is.na(HDL_T0) & TG_T0 > 0 & HDL_T0 > 0,
+                    log10(TG_T0 / HDL_T0), NA_real_),
+    AIP_T1 = ifelse(!is.na(TG_T1) & !is.na(HDL_T1) & TG_T1 > 0 & HDL_T1 > 0,
+                    log10(TG_T1 / HDL_T1), NA_real_),
+
+    HOMA_T0 = ifelse(!is.na(Glucose_T0) & !is.na(Insulin_T0) & Glucose_T0 > 0 & Insulin_T0 > 0,
+                     ((Glucose_T0 / 18) * Insulin_T0) / 22.5, NA_real_),
+    HOMA_T1 = ifelse(!is.na(Glucose_T1) & !is.na(Insulin_T1) & Glucose_T1 > 0 & Insulin_T1 > 0,
+                     ((Glucose_T1 / 18) * Insulin_T1) / 22.5, NA_real_)
+  ) %>%
+  dplyr::left_join(
+    crp_T0 %>% dplyr::select(study_id, CRP_T0_z),
+    by = "study_id"
+  )
+
+# -------------------------
+# 3) Long ANCOVA dataset (ALL outcomes)
+# -------------------------
+all_outcomes <- c("Glucose", "Insulin", "HOMA", "TyG", "AIP", "HDL", "LDL", "nonHDL")
+
+ancova_long_crp <- met_T0T1_wide %>%
+  dplyr::transmute(
+    study_id, age, sex, BMI_baseline, fasting_duration_measured, CRP_T0_z,
+    Glucose_T0, Glucose_T1,
+    Insulin_T0, Insulin_T1,
+    HOMA_T0, HOMA_T1,
+    TyG_T0, TyG_T1,
+    AIP_T0, AIP_T1,
+    HDL_T0, HDL_T1,
+    LDL_T0, LDL_T1,
+    nonHDL_T0, nonHDL_T1
+  ) %>%
+  tidyr::pivot_longer(
+    cols = -c(study_id, age, sex, BMI_baseline, fasting_duration_measured, CRP_T0_z),
+    names_to = c("outcome", "time"),
+    names_pattern = "(.+)_T(0|1)",
+    values_to = "value"
+  ) %>%
+  dplyr::mutate(time = paste0("T", time)) %>%
+  tidyr::pivot_wider(names_from = time, values_from = value) %>%
+  dplyr::filter(outcome %in% all_outcomes) %>%
+  dplyr::mutate(
+    T0_model = dplyr::case_when(
+      outcome %in% c("Insulin", "HOMA") ~ safe_log(T0),
+      TRUE ~ T0
+    ),
+    T1_model = dplyr::case_when(
+      outcome %in% c("Insulin", "HOMA") ~ safe_log(T1),
+      TRUE ~ T1
+    )
+  )
+
+# -------------------------
+# 4) Fit one ANCOVA per outcome
+# -------------------------
+fit_crp_ancova_one <- function(data, outcome_name) {
+  df <- data %>%
+    dplyr::filter(outcome == outcome_name) %>%
+    dplyr::filter(
+      !is.na(T0_model), !is.na(T1_model),
+      !is.na(CRP_T0_z),
+      !is.na(fasting_duration_measured),
+      !is.na(BMI_baseline),
+      !is.na(age),
+      !is.na(sex)
+    ) %>%
+    dplyr::mutate(
+      T0_c      = center_only(T0_model),
+      fasting_c = center_only(fasting_duration_measured),
+      BMI_c     = center_only(BMI_baseline),
+      age_c     = center_only(age),
+      sex       = factor(sex, levels = c("F", "M"))
+    )
+
+  n_subj <- dplyr::n_distinct(df$study_id)
+
+  if (n_subj < 30) {
+    return(tibble(
+      outcome = outcome_name,
+      estimate = NA_real_,
+      std.error = NA_real_,
+      conf.low = NA_real_,
+      conf.high = NA_real_,
+      p.value = NA_real_,
+      n = n_subj
+    ))
+  }
+
+  fit <- lm(
+    T1_model ~ T0_c + fasting_c + BMI_c + age_c + sex + CRP_T0_z,
+    data = df
+  )
+
+  broom::tidy(fit, conf.int = TRUE) %>%
+    dplyr::filter(term == "CRP_T0_z") %>%
+    dplyr::transmute(
+      outcome = outcome_name,
+      estimate,
+      std.error,
+      conf.low,
+      conf.high,
+      p.value,
+      n = n_subj
+    )
+}
+
+# -------------------------
+# 5) Run models for all outcomes
+# -------------------------
+main_effect_results_crp <- purrr::map_dfr(
+  all_outcomes,
+  ~ fit_crp_ancova_one(ancova_long_crp, .x)
+) %>%
+  dplyr::mutate(
+    p_fdr = p.adjust(p.value, method = "BH")
+  ) %>%
+  dplyr::arrange(p_fdr)
+
+print(main_effect_results_crp)
+
+# Quick sanity checks
+print(unique(main_effect_results_crp$outcome))
+print(dplyr::count(ancova_long_crp, outcome))
+
+# -------------------------
+# 6) Pretty summary table
+# -------------------------
+crp_table_pretty <- main_effect_results_crp %>%
+  dplyr::mutate(
+    Outcome = dplyr::recode(
+      outcome,
+      Glucose = "Glucose",
+      Insulin = "Insulin",
+      HOMA = "HOMA-IR",
+      TyG = "TyG index",
+      AIP = "AIP",
+      HDL = "HDL-C",
+      LDL = "LDL-C",
+      nonHDL = "Non-HDL-C"
+    ),
+    Estimate = round(estimate, 3),
+    SE = round(std.error, 3),
+    `95% CI` = ifelse(
+      is.na(conf.low) | is.na(conf.high),
+      NA_character_,
+      paste0("[", round(conf.low, 3), ", ", round(conf.high, 3), "]")
+    ),
+    `P (raw)` = fmt_p(p.value),
+    `P (FDR)` = fmt_p(p_fdr),
+    `Signif.` = p_stars(p_fdr)
+  ) %>%
+  dplyr::arrange(p_fdr, p.value) %>%
+  dplyr::select(
+    Outcome, Estimate, SE, `95% CI`, `P (raw)`, `P (FDR)`, `Signif.`, n
+  )
+
+print(crp_table_pretty)
+
+crp_table_pretty %>%
+  kableExtra::kbl(
+    caption = "ANCOVA results for baseline CRP predicting fasting-endpoint metabolic outcomes (T1), adjusted for baseline outcome level, fasting duration, BMI, age, and sex.",
+    align = c("l", "r", "r", "l", "r", "r", "c", "r"),
+    booktabs = TRUE
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed"),
+    full_width = FALSE,
+    font_size = 12
+  ) %>%
+  kableExtra::add_header_above(c(" " = 1, "CRP effect" = 6, " " = 1)) %>%
+  kableExtra::footnote(
+    general = "Estimate refers to the adjusted regression coefficient for baseline CRP (z-scored log-CRP).",
+    general_title = "Note: "
+  )
+
+# -------------------------
+# 7) Save CSV
+# -------------------------
+dir.create("ModelTables", showWarnings = FALSE)
+
+readr::write_csv(
+  crp_table_pretty,
+  "ModelTables/ANCOVA_baseline_CRP_predicting_T1_metabolic_outcomes.csv"
+)
+```
+
+## 15) CRP (T0->T1)
+
+```{r CRp check, message=FALSE, warning=FALSE}
+## ============================================================
+## Baseline CRP stratification table
+## Mirrors Mesnage et al. 2025 stratification approach
+## Groups: Low (<1 mg/L), Moderate (1-10 mg/L), Elevated (>10 mg/L)
+## ============================================================
+
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(tidyr)
+  library(knitr)
+  library(kableExtra)
+})
+
+## -------------------------
+## 1) Build CRP wide (T0, T1)
+## -------------------------
+crp_wide <- FF_laboratory_master %>%
+  filter(
+    variable == "CRP (mg/l)",
+    timepoint %in% c("T0", "T1")
+  ) %>%
+  group_by(study_id, timepoint) %>%
+  slice_min(datetime, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  select(study_id, timepoint, value, BMI_baseline) %>%
+  pivot_wider(names_from = timepoint, values_from = value) %>%
+  filter(!is.na(T0), !is.na(T1), T0 > 0, T1 > 0) %>%
+  mutate(
+    delta_CRP     = T1 - T0,
+    pct_change    = ((T1 - T0) / T0) * 100,
+    CRP_baseline_group = case_when(
+      T0 < 1  ~ "Low (<1 mg/L)",
+      T0 <= 10 ~ "Moderate (1–10 mg/L)",
+      T0 > 10  ~ "Elevated (>10 mg/L)"
+    ),
+    CRP_baseline_group = factor(
+      CRP_baseline_group,
+      levels = c("Low (<1 mg/L)", "Moderate (1–10 mg/L)", "Elevated (>10 mg/L)")
+    ),
+    BMI_cat = factor(
+      case_when(
+        is.na(BMI_baseline) ~ NA_character_,
+        BMI_baseline < 25   ~ "Normal",
+        BMI_baseline < 30   ~ "Overweight",
+        TRUE                ~ "Obese"
+      ),
+      levels = c("Normal", "Overweight", "Obese")
+    )
+  )
+
+## -------------------------
+## 2) Summary table by CRP group
+## -------------------------
+fmt_mean_se <- function(x) {
+  x <- x[!is.na(x)]
+  if (length(x) == 0) return(NA_character_)
+  paste0(round(mean(x), 2), " ± ", round(sd(x) / sqrt(length(x)), 2))
+}
+
+crp_strat_table <- crp_wide %>%
+  group_by(CRP_baseline_group) %>%
+  summarise(
+    n                    = n(),
+    `CRP at T0 (mean ± SE)`  = fmt_mean_se(T0),
+    `CRP at T1 (mean ± SE)`  = fmt_mean_se(T1),
+    `Absolute change (mean ± SE)` = fmt_mean_se(delta_CRP),
+    `% change (mean ± SE)`   = fmt_mean_se(pct_change),
+    .groups = "drop"
+  )
+
+## -------------------------
+## 3) Add a total row
+## -------------------------
+total_row <- crp_wide %>%
+  summarise(
+    CRP_baseline_group   = factor("Total", levels = levels(crp_wide$CRP_baseline_group)),
+    n                    = n(),
+    `CRP at T0 (mean ± SE)`  = fmt_mean_se(T0),
+    `CRP at T1 (mean ± SE)`  = fmt_mean_se(T1),
+    `Absolute change (mean ± SE)` = fmt_mean_se(delta_CRP),
+    `% change (mean ± SE)`   = fmt_mean_se(pct_change)
+  )
+
+crp_strat_final <- bind_rows(crp_strat_table, total_row) %>%
+  rename(`Baseline CRP group` = CRP_baseline_group)
+
+## -------------------------
+## 4) Print table
+## -------------------------
+crp_strat_final %>%
+  kbl(
+    caption = "Table X. Fasting-associated changes in CRP stratified by baseline CRP level. 
+               Values are mean ± SE. Low: <1 mg/L; Moderate: 1–10 mg/L; Elevated: >10 mg/L.",
+    align = c("l", "c", "c", "c", "c", "c")
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed"),
+    full_width = FALSE
+  ) %>%
+  row_spec(nrow(crp_strat_final), bold = TRUE) %>%
+  footnote(
+    general = "CRP measured in mg/L. T0 = pre-fasting baseline; T1 = end of fasting endpoint.",
+    general_title = "Note: "
+  )
+
+## -------------------------
+## 5) Optional: also cross-tabulate by BMI category
+## -------------------------
+crp_bmi_table <- crp_wide %>%
+  filter(!is.na(BMI_cat)) %>%
+  group_by(CRP_baseline_group, BMI_cat) %>%
+  summarise(
+    n = n(),
+    `Mean T0 CRP` = round(mean(T0), 2),
+    `Mean T1 CRP` = round(mean(T1), 2),
+    `Mean Δ CRP`  = round(mean(delta_CRP), 2),
+    `Mean % change` = round(mean(pct_change), 1),
+    .groups = "drop"
+  ) %>%
+  rename(
+    `Baseline CRP group` = CRP_baseline_group,
+    `BMI category` = BMI_cat
+  )
+
+crp_bmi_table %>%
+  kbl(
+    caption = "Table X (supplementary). Fasting-associated CRP changes by baseline CRP group and BMI category.",
+    align = "l"
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed"),
+    full_width = FALSE
+  ) %>%
+  collapse_rows(columns = 1, valign = "top")
+
+## -------------------------
+## 6) Save both
+## -------------------------
+dir.create("ModelTables", showWarnings = FALSE)
+write.csv(crp_strat_final,  "ModelTables/CRP_stratified_by_baseline_group.csv",     row.names = FALSE)
+write.csv(crp_bmi_table,    "ModelTables/CRP_stratified_by_baseline_and_BMI.csv",   row.names = FALSE)
+```
+
+## 16) TG/HDL (T0->T1)
+
+```{r TG/HDL check, message=FALSE, warning=FALSE}
+## ============================================================
+## TG/HDL ratio by baseline CRP stratum and BMI category
+## At T0, T1, and change during fasting
+## ============================================================
+
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(tidyr)
+  library(knitr)
+  library(kableExtra)
+})
+
+## -------------------------
+## 1) Build TG/HDL wide (T0, T1)
+## -------------------------
+tg_hdl_wide <- FF_laboratory_master %>%
+  filter(
+    variable %in% c("Triglycerides (mg/dl)", "HDL-C (mg/dl)"),
+    timepoint %in% c("T0", "T1")
+  ) %>%
+  group_by(study_id, variable, timepoint) %>%
+  slice_min(datetime, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  select(study_id, variable, timepoint, value, BMI_baseline) %>%
+  pivot_wider(names_from = c(variable, timepoint), values_from = value) %>%
+  rename(
+    TG_T0  = `Triglycerides (mg/dl)_T0`,
+    TG_T1  = `Triglycerides (mg/dl)_T1`,
+    HDL_T0 = `HDL-C (mg/dl)_T0`,
+    HDL_T1 = `HDL-C (mg/dl)_T1`
+  ) %>%
+  filter(
+    !is.na(TG_T0), !is.na(HDL_T0), HDL_T0 > 0,
+    !is.na(TG_T1), !is.na(HDL_T1), HDL_T1 > 0
+  ) %>%
+  mutate(
+    TG_HDL_T0 = TG_T0 / HDL_T0,
+    TG_HDL_T1 = TG_T1 / HDL_T1,
+    delta_TG_HDL = TG_HDL_T1 - TG_HDL_T0,
+    pct_change   = ((TG_HDL_T1 - TG_HDL_T0) / TG_HDL_T0) * 100,
+    BMI_cat = factor(
+      case_when(
+        is.na(BMI_baseline) ~ NA_character_,
+        BMI_baseline < 25   ~ "Normal",
+        BMI_baseline < 30   ~ "Overweight",
+        TRUE                ~ "Obese"
+      ),
+      levels = c("Normal", "Overweight", "Obese")
+    )
+  )
+
+## -------------------------
+## 2) Join baseline CRP groups
+## -------------------------
+crp_groups <- FF_laboratory_master %>%
+  filter(variable == "CRP (mg/l)", timepoint == "T0") %>%
+  group_by(study_id) %>%
+  slice_min(datetime, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  transmute(
+    study_id,
+    CRP_T0 = value,
+    CRP_baseline_group = factor(
+      case_when(
+        value < 1   ~ "Low (<1 mg/L)",
+        value <= 10 ~ "Moderate (1–10 mg/L)",
+        value > 10  ~ "Elevated (>10 mg/L)"
+      ),
+      levels = c("Low (<1 mg/L)", "Moderate (1–10 mg/L)", "Elevated (>10 mg/L)")
+    )
+  )
+
+tg_hdl_crp <- tg_hdl_wide %>%
+  left_join(crp_groups, by = "study_id") %>%
+  filter(!is.na(CRP_baseline_group))
+
+## -------------------------
+## 3) Summary by CRP stratum only
+## -------------------------
+fmt_mean_sd <- function(x) {
+  x <- x[!is.na(x)]
+  paste0(round(mean(x), 2), " ± ", round(sd(x), 2))
+}
+
+tg_hdl_by_crp <- tg_hdl_crp %>%
+  group_by(CRP_baseline_group) %>%
+  summarise(
+    n                        = n(),
+    `TG/HDL at T0 (mean ± SD)` = fmt_mean_sd(TG_HDL_T0),
+    `TG/HDL at T1 (mean ± SD)` = fmt_mean_sd(TG_HDL_T1),
+    `Δ TG/HDL (mean ± SD)`     = fmt_mean_sd(delta_TG_HDL),
+    `% change (mean ± SD)`     = fmt_mean_sd(pct_change),
+    .groups = "drop"
+  )
+
+## -------------------------
+## 4) Summary by CRP stratum AND BMI category
+## -------------------------
+tg_hdl_by_crp_bmi <- tg_hdl_crp %>%
+  filter(!is.na(BMI_cat)) %>%
+  group_by(CRP_baseline_group, BMI_cat) %>%
+  summarise(
+    n                  = n(),
+    `Mean T0 TG/HDL`   = round(mean(TG_HDL_T0, na.rm = TRUE), 2),
+    `Mean T1 TG/HDL`   = round(mean(TG_HDL_T1, na.rm = TRUE), 2),
+    `Mean Δ TG/HDL`    = round(mean(delta_TG_HDL, na.rm = TRUE), 2),
+    `Mean % change`    = round(mean(pct_change, na.rm = TRUE), 1),
+    .groups = "drop"
+  ) %>%
+  rename(
+    `Baseline CRP group` = CRP_baseline_group,
+    `BMI category`       = BMI_cat
+  )
+
+## -------------------------
+## 5) Print tables
+## -------------------------
+tg_hdl_by_crp %>%
+  rename(`Baseline CRP group` = CRP_baseline_group) %>%
+  kbl(
+    caption = "TG/HDL ratio by baseline CRP stratum (T0 and T1).",
+    align = c("l", "c", "c", "c", "c", "c")
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed"),
+    full_width = FALSE
+  )
+
+tg_hdl_by_crp_bmi %>%
+  kbl(
+    caption = "TG/HDL ratio by baseline CRP stratum and BMI category.",
+    align = "l"
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed"),
+    full_width = FALSE
+  ) %>%
+  collapse_rows(columns = 1, valign = "top")
+
+## -------------------------
+## 6) Save
+## -------------------------
+dir.create("ModelTables", showWarnings = FALSE)
+write.csv(tg_hdl_by_crp,
+          "ModelTables/TGHDL_by_CRP_stratum.csv",
+          row.names = FALSE)
+write.csv(tg_hdl_by_crp_bmi,
+          "ModelTables/TGHDL_by_CRP_stratum_and_BMI.csv",
+          row.names = FALSE)
+```
+
+## 17) Residuals and QQ plotsfor main ANCOVA models
+
+```{r ANCOVA-main-diagnostics, message=FALSE, warning=FALSE, fig.width=16, fig.height=10}
+## ============================================================
+## ANCOVA Residual Diagnostics
+## Fasting:   T1 ~ T0_c + fast_c + BMI_c + age_c + sex
+## Refeeding: T2 ~ T1_c + diet_keto + FR_c + age_c + sex + BMI_c
+##
+## Markers: CRP, GPT/ALT, Insulin, Glucose, Neutrophils,
+##          Monocytes, WBC, Lymphocytes, LDL-C, Total Cholesterol
+## Output:  one panel (resid + QQ) per phase
+## ============================================================
+
+diag_markers_select <- c(
+  "CRP (mg/l)",
+  "GPT/ALT (U/l)",
+  "Insulin (mIU/l)",
+  "Serum Glucose (mg/dl)",
+  "Neutrophils abs. (Tsd./µl)",
+  "Monocytes abs. (Tsd./µl)",
+  "White Blood Cells (Tsd./µl)",
+  "Lymphocytes abs. (Tsd./µl)",
+  "LDL-C (mg/dl)",
+  "Total Cholesterol (mg/dl)"
+)
+
+## ---- helper: fit one marker and return augmented residuals ----
+
+get_resid_df <- function(wide_df, outcome_col, predictor_cols,
+                         marker_name, log_markers = markers_log) {
+
+  df <- wide_df %>%
+    filter(variable == marker_name) %>%
+    drop_na(all_of(c(outcome_col, predictor_cols)))
+
+  if (n_distinct(df$study_id) < 20) return(NULL)
+
+  fit <- lm(
+    as.formula(paste(outcome_col, "~", paste(predictor_cols, collapse = " + "))),
+    data = df
+  )
+
+  is_logged <- marker_name %in% log_markers   # explicit, not relying on global scope
+
+  broom::augment(fit) %>%
+    mutate(
+      marker       = marker_name,
+      display_name = ifelse(is_logged, paste0(marker_name, " (log)"), marker_name),
+      label = display_name %>%
+        str_replace(" abs\\. \\(Tsd\\..*?\\)", "") %>%
+        str_replace(" \\(mg/dl\\)", "") %>%
+        str_replace(" \\(U/l\\)", "") %>%
+        str_replace(" \\(mIU/l\\)", "") %>%
+        str_replace("Serum ", "") %>%
+        str_replace("White Blood Cells", "WBC") %>%
+        str_replace(" \\(log\\)", "\n(log)")
+    )
+}
+
+## Then call with explicit log_markers argument
+fast_resid <- purrr::map_dfr(
+  diag_markers_select,
+  ~ get_resid_df(
+      wide_df        = fasting_wide,
+      outcome_col    = "T1",
+      predictor_cols = c("T0_c", "fast_c", "BMI_c", "age_c", "sex"),
+      marker_name    = .x,
+      log_markers    = markers_log   # explicit
+    )
+)
+
+refeed_resid <- purrr::map_dfr(
+  diag_markers_select,
+  ~ get_resid_df(
+      wide_df        = refeed_wide,
+      outcome_col    = "T2",
+      predictor_cols = c("T1_c", "diet_keto", "FR_c", "age_c", "sex", "BMI_c"),
+      marker_name    = .x,
+      log_markers    = markers_log   # explicit
+    )
+)
+
+## ---- fix factor order for panels ----
+marker_label_order <- fast_resid %>%
+  distinct(marker, label) %>%
+  slice(match(diag_markers_select, marker)) %>%
+  pull(label)
+
+fast_resid  <- fast_resid  %>% mutate(label = factor(label, levels = marker_label_order))
+refeed_resid <- refeed_resid %>% mutate(label = factor(label, levels = marker_label_order))
+
+## ============================================================
+## PLOT FUNCTION: residuals vs fitted + QQ side by side per marker
+## ============================================================
+make_diag_panel <- function(resid_df, phase_label) {
+
+  # --- Residuals vs Fitted ---
+  p_resid <- ggplot(resid_df, aes(x = .fitted, y = .resid)) +
+    geom_hline(yintercept = 0, linetype = "dashed", colour = "grey50", linewidth = 0.6) +
+    geom_point(alpha = 0.45, size = 0.9, colour = "grey30") +
+    geom_smooth(
+      method  = "loess", se = FALSE,
+      colour  = "steelblue", linewidth = 0.85
+    ) +
+    facet_wrap(~ label, scales = "free", ncol = 5) +
+    labs(
+      title    = paste0(phase_label, " ANCOVA — Residuals vs Fitted"),
+      subtitle = "Loess smoother should be flat; curvature = potential misspecification",
+      x        = "Fitted values",
+      y        = "Residuals"
+    ) +
+    theme_bw(base_size = 11) +
+    theme(
+      strip.background = element_rect(fill = "grey92"),
+      strip.text       = element_text(face = "bold", size = 9),
+      panel.grid.minor = element_blank(),
+      plot.title       = element_text(face = "bold")
+    )
+
+  # --- QQ plot ---
+  p_qq <- ggplot(resid_df, aes(sample = .std.resid)) +
+    stat_qq(alpha = 0.45, size = 0.9, colour = "grey30") +
+    stat_qq_line(colour = "steelblue", linewidth = 0.85) +
+    facet_wrap(~ label, scales = "free", ncol = 5) +
+    labs(
+      title    = paste0(phase_label, " ANCOVA — Normal QQ Plot"),
+      subtitle = "Points should follow the reference line",
+      x        = "Theoretical quantiles",
+      y        = "Standardised residuals"
+    ) +
+    theme_bw(base_size = 11) +
+    theme(
+      strip.background = element_rect(fill = "grey92"),
+      strip.text       = element_text(face = "bold", size = 9),
+      panel.grid.minor = element_blank(),
+      plot.title       = element_text(face = "bold")
+    )
+
+  list(resid = p_resid, qq = p_qq)
+}
+
+## ---- generate panels ----
+fast_plots   <- make_diag_panel(fast_resid,   "Fasting")
+refeed_plots <- make_diag_panel(refeed_resid, "Refeeding")
+
+## ---- print in document ----
+print(fast_plots$resid)
+print(fast_plots$qq)
+print(refeed_plots$resid)
+print(refeed_plots$qq)
+
+## ---- save ----
+dir.create("ModelDiagnostics", showWarnings = FALSE)
+
+ggsave("ModelDiagnostics/Fasting_ANCOVA_resid_vs_fitted.png",
+       fast_plots$resid,   width = 16, height = 7, dpi = 300)
+ggsave("ModelDiagnostics/Fasting_ANCOVA_QQ.png",
+       fast_plots$qq,      width = 16, height = 7, dpi = 300)
+ggsave("ModelDiagnostics/Refeeding_ANCOVA_resid_vs_fitted.png",
+       refeed_plots$resid, width = 16, height = 7, dpi = 300)
+ggsave("ModelDiagnostics/Refeeding_ANCOVA_QQ.png",
+       refeed_plots$qq,    width = 16, height = 7, dpi = 300)
+
+## ---- companion summary table ----
+diag_summary <- bind_rows(
+  fast_resid   %>% mutate(phase = "Fasting"),
+  refeed_resid %>% mutate(phase = "Refeeding")
+) %>%
+  group_by(phase, marker) %>%
+  summarise(
+    n             = n(),
+    max_cook      = round(max(cooks.distance(
+                      lm(.resid ~ .fitted)   # placeholder — Cook's already in augment
+                    ), na.rm = TRUE), 4),
+    loess_max_dev = {
+      lo <- loess(.resid ~ .fitted, data = cur_data())
+      round(max(abs(predict(lo)), na.rm = TRUE), 3)
+    },
+    .groups = "drop"
+  ) %>%
+  mutate(
+    log_transformed = marker %in% markers_log,
+    flag = ifelse(loess_max_dev > 0.3, "⚠ Review", "OK")
+  ) %>%
+  arrange(phase, desc(loess_max_dev))
+
+diag_summary %>%
+  kbl(
+    caption = paste0(
+      "Table S1. Residual diagnostic summary. loess_max_dev = maximum absolute deviation of Loess ",
+      "smoother from zero (proxy for non-linearity/heteroscedasticity). ",
+      "† markers were log-transformed prior to modelling."
+    ),
+    align = "l"
+  ) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+
+write_csv(diag_summary, "ModelTables/ANCOVA_residual_diagnostic_summary.csv")
+```
+
+## 18) Cook's distance and refitting 
+
+```{r Cooksdistanceandrefitting, message=FALSE, warning=FALSE, fig.width=16, fig.height=10}
+# due to outliers in some of the markers, especially even after log-transformation, the observation with the most influence was removed and the model was refitted again.
+# model was defined as robust if SE change < 1
+# since it takes SE change = 2 to go from significant to ns or vice versa 
+
+run_cooks_sensitivity <- function(wide_df, outcome, predictors, 
+                                   key_predictors, phase_label) {
+  wide_df %>%
+    group_by(variable) %>%
+    group_modify(~{
+      df <- .x %>% drop_na(all_of(c(outcome, predictors)))
+      
+      n_subj <- n_distinct(df$study_id)
+      if (n_subj < 20) return(tibble(
+        n = n_subj, max_cook = NA_real_,
+        worst_subject = NA_character_,
+        max_change_SE = NA_real_,
+        conclusion = "Skipped"
+      ))
+      
+      fit_full <- lm(
+        as.formula(paste(outcome, "~", paste(predictors, collapse = "+"))),
+        data = df
+      )
+      
+      cooks     <- cooks.distance(fit_full)
+      worst_idx <- which.max(cooks)
+      
+      df_reduced  <- df[-worst_idx, ]
+      fit_reduced <- lm(
+        as.formula(paste(outcome, "~", paste(predictors, collapse = "+"))),
+        data = df_reduced
+      )
+      
+      coef_full    <- coef(fit_full)[key_predictors]
+      coef_reduced <- coef(fit_reduced)[key_predictors]
+      se_full      <- summary(fit_full)$coefficients[key_predictors, "Std. Error"]
+      
+      max_change_in_se <- max(
+        abs(coef_reduced - coef_full) / se_full,
+        na.rm = TRUE
+      )
+      
+      robust <- max_change_in_se < 1
+      
+      tibble(
+        n             = n_subj,
+        max_cook      = round(max(cooks), 4),
+        worst_subject = as.character(df$study_id[worst_idx]),
+        max_change_SE = round(max_change_in_se, 2),
+        conclusion    = ifelse(
+          robust,
+          paste0("Robust (max ", round(max_change_in_se, 2), " SE change)"),
+          paste0("⚠ Review (max ", round(max_change_in_se, 2), " SE change)")
+        )
+      )
+    }) %>%
+    ungroup() %>%
+    mutate(phase = phase_label)
+}
+
+## ---- fasting: key predictors are fast_c and BMI_c ----
+cooks_fast <- run_cooks_sensitivity(
+  fasting_wide,
+  outcome         = "T1",
+  predictors      = c("T0_c", "fast_c", "BMI_c", "age_c", "sex"),
+  key_predictors  = c("fast_c", "BMI_c"),
+  phase_label     = "Fasting"
+)
+
+## ---- refeeding: key predictors are diet_keto and FR_c ----
+cooks_refeed <- run_cooks_sensitivity(
+  refeed_wide,
+  outcome         = "T2",
+  predictors      = c("T1_c", "diet_keto", "FR_c", "age_c", "sex", "BMI_c"),
+  key_predictors  = c("diet_ketoKeto", "FR_c"),
+  phase_label     = "Refeeding"
+)
+
+cooks_all <- bind_rows(cooks_fast, cooks_refeed) %>%
+  arrange(phase, desc(max_cook))
+
+cat(sprintf("Non-robust after removal: %d / %d\n",
+  sum(grepl("⚠", cooks_all$conclusion), na.rm = TRUE),
+  nrow(cooks_all)))
+
+cooks_all %>%
+  kbl(
+    caption = paste0(
+      "Table S2. Cook's distance sensitivity analysis. The single most influential observation ",
+      "per marker was removed and key predictors refit. Robustness assessed as ",
+      "change < 1 SE in key predictor coefficients after removal."
+    ),
+    align = "l"
+  ) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE) %>%
+  scroll_box(width = "100%", height = "500px")
+
+write_csv(cooks_all, "ModelTables/Cooks_sensitivity_main_ANCOVA.csv")
+```
+
+## 19) VIF ANCOVA tests
+
+```{r vif-all-ancova, message=FALSE, warning=FALSE}
+## ============================================================
+## S1.3  VIF — ALL fasting + refeeding ANCOVA models
+## ============================================================
+
+suppressPackageStartupMessages(library(car))
+
+# Helper: fit one marker and return VIF
+get_vif <- function(wide_df, outcome, predictors, phase_label) {
+  wide_df %>%
+    group_by(variable) %>%
+    group_modify(~{
+      df <- .x %>% drop_na(all_of(c(outcome, predictors)))
+      
+      if (n_distinct(df$study_id) < 20) return(tibble(predictor = predictors, VIF = NA_real_))
+      
+      fit      <- lm(as.formula(paste(outcome, "~", paste(predictors, collapse = "+"))), data = df)
+      vif_vals <- tryCatch(car::vif(fit), error = function(e) rep(NA_real_, length(predictors)))
+      
+      tibble(predictor = names(vif_vals), VIF = round(as.numeric(vif_vals), 2))
+    }) %>%
+    ungroup() %>%
+    mutate(phase = phase_label)
+}
+
+# Fasting: T1 ~ T0_c + fast_c + BMI_c + age_c + sex
+vif_fast <- get_vif(
+  fasting_wide,
+  outcome    = "T1",
+  predictors = c("T0_c", "fast_c", "BMI_c", "age_c", "sex"),
+  phase_label = "Fasting"
+)
+
+# Refeeding: T2 ~ T1_c + diet_keto + FR_c + age_c + sex + BMI_c
+vif_refeed <- get_vif(
+  refeed_wide,
+  outcome    = "T2",
+  predictors = c("T1_c", "diet_keto", "FR_c", "age_c", "sex", "BMI_c"),
+  phase_label = "Refeeding"
+)
+
+vif_all <- bind_rows(vif_fast, vif_refeed) %>%
+  mutate(flag = case_when(
+    is.na(VIF)  ~ "–",
+    VIF >= 10   ~ "⚠ Severe (≥10)",
+    VIF >=  5   ~ "⚠ Moderate (≥5)",
+    TRUE        ~ "OK"
+  ))
+
+# Max VIF per marker — clean summary
+vif_summary <- vif_all %>%
+  filter(!is.na(VIF)) %>%
+  group_by(phase, variable) %>%
+  summarise(
+    max_VIF    = max(VIF),
+    worst_pred = predictor[which.max(VIF)],
+    .groups = "drop"
+  ) %>%
+  mutate(flag = case_when(
+    max_VIF >= 10 ~ "⚠ Severe",
+    max_VIF >=  5 ~ "⚠ Moderate",
+    TRUE          ~ "OK"
+  )) %>%
+  arrange(phase, desc(max_VIF))
+
+cat(sprintf("Max VIF across all models: %.2f\n", max(vif_summary$max_VIF, na.rm = TRUE)))
+cat(sprintf("Models with VIF ≥ 5: %d\n", sum(vif_summary$max_VIF >= 5, na.rm = TRUE)))
+
+vif_summary %>%
+  kbl(
+    caption = paste0(
+      "Table S3. Maximum VIF per marker for fasting and refeeding ANCOVA models. ",
+      "All predictors were mean-centred prior to modelling. ",
+      "VIF < 5 indicates no meaningful collinearity."
+    ),
+    align = "l"
+  ) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE) %>%
+  scroll_box(width = "100%", height = "500px")
+
+write_csv(vif_summary, "ModelTables/S1_VIF_all_ANCOVA.csv")
+```
+
+
+## 20) Coefficient of variation
+
+```{r CV-all, message=FALSE, warning=FALSE}
+# CV is dimensionless so dont worry about units
+# preferably use raw and untransformed values
+# mean == phase specific mean change
+# abs() afterwards since direction doesnt matter for change
+
+delta_df <- FF_laboratory_master %>%
+  filter(variable %in% markers_lm, timepoint %in% c("T0", "T1", "T2")) %>%
+  group_by(study_id, variable, timepoint) %>%
+  slice_min(datetime, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  pivot_wider(
+    id_cols    = c(study_id, sex, variable, fasting_duration_measured,
+                   FR_duration, age, BMI_baseline, diet_keto),
+    names_from  = timepoint,
+    values_from = value
+  ) %>%
+  mutate(
+    delta_T1_T0 = if_else(!is.na(T1) & !is.na(T0), T1 - T0, NA_real_),
+    delta_T2_T1 = if_else(!is.na(T2) & !is.na(T1), T2 - T1, NA_real_)
+  )
+
+cv_fasting <- delta_df %>%
+  mutate(domain = assign_domain_from_variable(variable)) %>%
+  filter(domain %in% c("Circulating immune cells", "Lipid", "Metabolic / Organ")) %>%
+  group_by(domain, variable) %>%
+  summarise(
+    mean = mean(delta_T1_T0, na.rm = TRUE),
+    sd   = sd(delta_T1_T0,   na.rm = TRUE),
+    CV   = abs(sd / mean) * 100,
+    .groups = "drop"
+  ) %>%
+  group_by(domain) %>%
+  summarise(median_CV_fasting = median(CV, na.rm = TRUE), .groups = "drop")
+
+cv_refeeding <- delta_df %>%
+  mutate(domain = assign_domain_from_variable(variable)) %>%
+  filter(domain %in% c("Circulating immune cells", "Lipid", "Metabolic / Organ")) %>%
+  group_by(domain, variable) %>%
+  summarise(
+    mean = mean(delta_T2_T1, na.rm = TRUE),
+    sd   = sd(delta_T2_T1,   na.rm = TRUE),
+    CV   = abs(sd / mean) * 100,
+    .groups = "drop"
+  ) %>%
+  group_by(domain) %>%
+  summarise(median_CV_refeeding = median(CV, na.rm = TRUE), .groups = "drop")
+
+left_join(cv_fasting, cv_refeeding, by = "domain") %>%
+  mutate(
+    median_CV_fasting   = round(median_CV_fasting,   1),
+    median_CV_refeeding = round(median_CV_refeeding, 1)
+  ) %>%
+  arrange(desc(median_CV_fasting)) %>%
+  rename(
+    "Domain"             = domain,
+    "Fasting (T0→T1)"   = median_CV_fasting,
+    "Refeeding (T1→T2)" = median_CV_refeeding
+  ) %>%
+  kbl(
+    caption = "Table S. Median coefficient of variation (%) of within-person changes by domain and phase.",
+    align   = c("l", "c", "c")
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed"),
+    full_width = FALSE
+  ) %>%
+  add_header_above(c(" " = 1, "Median CV (%)" = 2)) %>%
+  footnote(
+    general       = "CV = |SD / mean| × 100, computed on raw untransformed within-person changes. Higher values indicate greater inter-individual variability relative to the average change.",
+    general_title = "Note: "
+  )
+```
