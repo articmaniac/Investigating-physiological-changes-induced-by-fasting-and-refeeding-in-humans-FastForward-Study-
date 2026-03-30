@@ -1,0 +1,25 @@
+Index,Term,Estimate,SE,95% CI,P (raw),P (FDR),Signif.,n_subjects
+LMR,"End of fasting (T1), centered",0.794,0.046,"[0.702, 0.885]",7.14e-42,1.43e-41,☆☆☆,219
+LMR,Diet: Keto (vs Non-Keto),-0.006,0.036,"[-0.077, 0.064]",0.8560,0.8560,ns,219
+LMR,"Refeeding duration, centered",0.013,0.011,"[-0.008, 0.034]",0.2354,0.3138,ns,219
+LMR,"Baseline BMI, centered",-0.003,0.003,"[-0.008, 0.003]",0.3867,0.5156,ns,219
+LMR,"Age, centered",-0.004,0.001,"[-0.007, -0.001]",0.0077,0.0307,☆,219
+LMR,Sex: Male (vs Female),-0.068,0.033,"[-0.134, -0.002]",0.0433,0.1734,ns,219
+NLR,"End of fasting (T1), centered",0.604,0.049,"[0.508, 0.7]",1.49e-26,1.49e-26,☆☆☆,208
+NLR,Diet: Keto (vs Non-Keto),0.057,0.055,"[-0.052, 0.166]",0.3007,0.4572,ns,208
+NLR,"Refeeding duration, centered",-0.037,0.018,"[-0.072, -0.002]",0.0372,0.0743,ns,208
+NLR,"Baseline BMI, centered",0.005,0.005,"[-0.004, 0.014]",0.2515,0.5031,ns,208
+NLR,"Age, centered",0.002,0.002,"[-0.002, 0.006]",0.3384,0.3384,ns,208
+NLR,Sex: Male (vs Female),0.067,0.049,"[-0.03, 0.164]",0.1760,0.3520,ns,208
+PLR,"End of fasting (T1), centered",0.846,0.033,"[0.78, 0.912]",4.32e-66,1.73e-65,☆☆☆,219
+PLR,Diet: Keto (vs Non-Keto),0.027,0.029,"[-0.029, 0.084]",0.3429,0.4572,ns,219
+PLR,"Refeeding duration, centered",-0.009,0.009,"[-0.026, 0.008]",0.3159,0.3159,ns,219
+PLR,"Baseline BMI, centered",0,0.002,"[-0.004, 0.005]",0.8772,0.8772,ns,219
+PLR,"Age, centered",0.001,0.001,"[-0.001, 0.004]",0.2457,0.3384,ns,219
+PLR,Sex: Male (vs Female),-0.007,0.026,"[-0.057, 0.043]",0.7821,0.9679,ns,219
+SII (a.u.),"End of fasting (T1), centered",0.674,0.044,"[0.588, 0.76]",6.08e-36,8.10e-36,☆☆☆,208
+SII (a.u.),Diet: Keto (vs Non-Keto),0.067,0.057,"[-0.045, 0.179]",0.2387,0.4572,ns,208
+SII (a.u.),"Refeeding duration, centered",-0.04,0.018,"[-0.076, -0.005]",0.0274,0.0743,ns,208
+SII (a.u.),"Baseline BMI, centered",0.006,0.005,"[-0.004, 0.015]",0.2337,0.5031,ns,208
+SII (a.u.),"Age, centered",0.003,0.002,"[-0.002, 0.007]",0.2622,0.3384,ns,208
+SII (a.u.),Sex: Male (vs Female),0.002,0.05,"[-0.096, 0.1]",0.9679,0.9679,ns,208

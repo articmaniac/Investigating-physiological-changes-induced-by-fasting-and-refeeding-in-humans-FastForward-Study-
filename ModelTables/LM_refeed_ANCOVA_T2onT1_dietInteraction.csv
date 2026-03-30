@@ -1,0 +1,169 @@
+Variable,Term,Estimate,SE,95% CI,P (raw),P (FDR),Signif.,n (subjects)
+Monocytes abs. (Tsd./µl)†,T1 × Diet (baseline dependency differs by diet),-0.501,0.118,"[-0.733, -0.269]",3.12e-05,7.49e-04,☆☆☆,219
+Ferritin (µg/l)†,T1 × Diet (baseline dependency differs by diet),0.085,0.031,"[0.023, 0.146]",0.0074,0.0647,ns,223
+Platelets (Tsd./µl)†,T1 × Diet (baseline dependency differs by diet),-0.194,0.073,"[-0.338, -0.051]",0.0081,0.0647,ns,219
+White Blood Cells (Tsd./µl)†,T1 × Diet (baseline dependency differs by diet),-0.229,0.099,"[-0.424, -0.034]",0.0219,0.1312,ns,219
+Basophils abs. (Tsd./µl)†,T1 × Diet (baseline dependency differs by diet),-0.247,0.112,"[-0.467, -0.026]",0.0286,0.1370,ns,213
+Alkaline Phosphatase (U/l),T1 × Diet (baseline dependency differs by diet),0.079,0.042,"[-0.005, 0.162]",0.0637,0.1837,ns,223
+GFR (ml/min),T1 × Diet (baseline dependency differs by diet),-0.129,0.066,"[-0.26, 0.002]",0.0528,0.1837,ns,223
+Immature Granulocytes abs. (Tsd./µl)†,T1 × Diet (baseline dependency differs by diet),-0.249,0.132,"[-0.51, 0.012]",0.0618,0.1837,ns,167
+Neutrophils abs. (Tsd./µl)†,T1 × Diet (baseline dependency differs by diet),-0.21,0.115,"[-0.437, 0.016]",0.0689,0.1837,ns,208
+Lymphocytes abs. (Tsd./µl)†,T1 × Diet (baseline dependency differs by diet),-0.151,0.092,"[-0.332, 0.03]",0.1007,0.2418,ns,219
+ESR (mm/h)†,T1 × Diet (baseline dependency differs by diet),-0.133,0.099,"[-0.328, 0.063]",0.1831,0.3380,ns,219
+Eosinophils abs. (Tsd./µl)†,T1 × Diet (baseline dependency differs by diet),-0.128,0.094,"[-0.314, 0.058]",0.1772,0.3380,ns,217
+GOT/AST (U/l)†,T1 × Diet (baseline dependency differs by diet),-0.11,0.082,"[-0.273, 0.052]",0.1825,0.3380,ns,221
+Gamma-GT (U/l),T1 × Diet (baseline dependency differs by diet),-0.046,0.043,"[-0.131, 0.038]",0.2779,0.4763,ns,222
+CRP (mg/l)†,T1 × Diet (baseline dependency differs by diet),-0.074,0.078,"[-0.227, 0.08]",0.3455,0.5528,ns,223
+HDL-C (mg/dl),T1 × Diet (baseline dependency differs by diet),0.023,0.038,"[-0.051, 0.098]",0.5390,0.8085,ns,223
+GPT/ALT (U/l)†,T1 × Diet (baseline dependency differs by diet),-0.008,0.062,"[-0.13, 0.113]",0.8941,0.9794,ns,223
+Insulin (mIU/l)†,T1 × Diet (baseline dependency differs by diet),0.037,0.142,"[-0.243, 0.318]",0.7940,0.9794,ns,223
+LDL-C (mg/dl),T1 × Diet (baseline dependency differs by diet),-0.003,0.05,"[-0.101, 0.095]",0.9481,0.9794,ns,223
+Non-HDL Cholesterol (mg/dl),T1 × Diet (baseline dependency differs by diet),-0.003,0.05,"[-0.102, 0.097]",0.9574,0.9794,ns,223
+Serum Glucose (mg/dl),T1 × Diet (baseline dependency differs by diet),0.004,0.145,"[-0.283, 0.291]",0.9783,0.9794,ns,223
+Total Cholesterol (mg/dl),T1 × Diet (baseline dependency differs by diet),0.017,0.051,"[-0.084, 0.119]",0.7396,0.9794,ns,223
+Triglycerides (mg/dl)†,T1 × Diet (baseline dependency differs by diet),-0.005,0.121,"[-0.244, 0.234]",0.9649,0.9794,ns,223
+Uric Acid (mg/dl),T1 × Diet (baseline dependency differs by diet),0.002,0.081,"[-0.158, 0.162]",0.9794,0.9794,ns,223
+Ferritin (µg/l)†,"End of fasting (T1), centered",0.99,0.016,"[0.958, 1.022]",1.66e-137,2.00e-136,☆☆☆,223
+Gamma-GT (U/l),"End of fasting (T1), centered",0.977,0.016,"[0.946, 1.009]",1.27e-137,2.00e-136,☆☆☆,222
+Alkaline Phosphatase (U/l),"End of fasting (T1), centered",0.948,0.02,"[0.91, 0.987]",7.34e-118,5.87e-117,☆☆☆,223
+HDL-C (mg/dl),"End of fasting (T1), centered",0.881,0.019,"[0.842, 0.919]",8.98e-112,5.39e-111,☆☆☆,223
+LDL-C (mg/dl),"End of fasting (T1), centered",0.785,0.022,"[0.742, 0.829]",4.84e-92,2.06e-91,☆☆☆,223
+Non-HDL Cholesterol (mg/dl),"End of fasting (T1), centered",0.816,0.023,"[0.77, 0.861]",5.14e-92,2.06e-91,☆☆☆,223
+Total Cholesterol (mg/dl),"End of fasting (T1), centered",0.807,0.024,"[0.759, 0.854]",2.79e-87,9.55e-87,☆☆☆,223
+GPT/ALT (U/l)†,"End of fasting (T1), centered",0.91,0.031,"[0.848, 0.972]",4.86e-76,1.46e-75,☆☆☆,223
+Platelets (Tsd./µl)†,"End of fasting (T1), centered",0.892,0.031,"[0.829, 0.954]",8.93e-74,2.38e-73,☆☆☆,219
+GFR (ml/min),"End of fasting (T1), centered",0.89,0.036,"[0.818, 0.961]",2.55e-64,6.12e-64,☆☆☆,223
+CRP (mg/l)†,"End of fasting (T1), centered",0.876,0.04,"[0.796, 0.956]",6.60e-56,1.44e-55,☆☆☆,223
+GOT/AST (U/l)†,"End of fasting (T1), centered",0.86,0.04,"[0.781, 0.939]",1.84e-55,3.68e-55,☆☆☆,221
+Eosinophils abs. (Tsd./µl)†,"End of fasting (T1), centered",0.853,0.046,"[0.763, 0.943]",1.62e-46,2.99e-46,☆☆☆,217
+ESR (mm/h)†,"End of fasting (T1), centered",0.76,0.045,"[0.672, 0.849]",3.70e-41,6.34e-41,☆☆☆,219
+Uric Acid (mg/dl),"End of fasting (T1), centered",0.708,0.045,"[0.618, 0.797]",2.99e-37,4.78e-37,☆☆☆,223
+Basophils abs. (Tsd./µl)†,"End of fasting (T1), centered",0.837,0.053,"[0.731, 0.942]",6.47e-37,9.71e-37,☆☆☆,213
+Lymphocytes abs. (Tsd./µl)†,"End of fasting (T1), centered",0.733,0.049,"[0.635, 0.83]",1.77e-34,2.50e-34,☆☆☆,219
+Triglycerides (mg/dl)†,"End of fasting (T1), centered",0.666,0.046,"[0.574, 0.757]",3.96e-33,5.28e-33,☆☆☆,223
+Monocytes abs. (Tsd./µl)†,"End of fasting (T1), centered",0.886,0.064,"[0.759, 1.012]",3.08e-31,3.89e-31,☆☆☆,219
+White Blood Cells (Tsd./µl)†,"End of fasting (T1), centered",0.682,0.056,"[0.571, 0.792]",3.27e-26,3.92e-26,☆☆☆,219
+Neutrophils abs. (Tsd./µl)†,"End of fasting (T1), centered",0.639,0.06,"[0.521, 0.757]",2.42e-21,2.76e-21,☆☆☆,208
+Serum Glucose (mg/dl),"End of fasting (T1), centered",0.434,0.064,"[0.308, 0.559]",9.46e-11,1.03e-10,☆☆☆,223
+Immature Granulocytes abs. (Tsd./µl)†,"End of fasting (T1), centered",0.471,0.074,"[0.324, 0.618]",2.31e-09,2.41e-09,☆☆☆,167
+Insulin (mIU/l)†,"End of fasting (T1), centered",0.245,0.076,"[0.094, 0.395]",0.0015,0.0015,☆☆,223
+GFR (ml/min),Diet: Keto (vs Non-Keto),3.639,0.95,"[1.766, 5.512]",1.69e-04,0.0041,☆☆,223
+Uric Acid (mg/dl),Diet: Keto (vs Non-Keto),0.607,0.185,"[0.241, 0.972]",0.0012,0.0148,☆,223
+Alkaline Phosphatase (U/l),Diet: Keto (vs Non-Keto),2.247,0.778,"[0.714, 3.779]",0.0043,0.0340,☆,223
+CRP (mg/l)†,Diet: Keto (vs Non-Keto),0.173,0.094,"[-0.012, 0.359]",0.0669,0.4014,ns,223
+Platelets (Tsd./µl)†,Diet: Keto (vs Non-Keto),0.031,0.018,"[-0.005, 0.067]",0.0892,0.4280,ns,219
+Basophils abs. (Tsd./µl)†,Diet: Keto (vs Non-Keto),-0.083,0.055,"[-0.191, 0.026]",0.1346,0.4340,ns,213
+Ferritin (µg/l)†,Diet: Keto (vs Non-Keto),-0.033,0.022,"[-0.077, 0.011]",0.1447,0.4340,ns,223
+Triglycerides (mg/dl)†,Diet: Keto (vs Non-Keto),0.047,0.029,"[-0.011, 0.105]",0.1111,0.4340,ns,223
+LDL-C (mg/dl),Diet: Keto (vs Non-Keto),2.385,2.038,"[-1.632, 6.402]",0.2432,0.6486,ns,223
+Non-HDL Cholesterol (mg/dl),Diet: Keto (vs Non-Keto),2.291,2.097,"[-1.841, 6.424]",0.2757,0.6616,ns,223
+ESR (mm/h)†,Diet: Keto (vs Non-Keto),-0.075,0.076,"[-0.226, 0.075]",0.3248,0.6911,ns,219
+Total Cholesterol (mg/dl),Diet: Keto (vs Non-Keto),2.131,2.254,"[-2.312, 6.574]",0.3455,0.6911,ns,223
+Neutrophils abs. (Tsd./µl)†,Diet: Keto (vs Non-Keto),0.041,0.047,"[-0.053, 0.134]",0.3900,0.7200,ns,208
+Immature Granulocytes abs. (Tsd./µl)†,Diet: Keto (vs Non-Keto),-0.05,0.068,"[-0.185, 0.085]",0.4660,0.7989,ns,167
+Lymphocytes abs. (Tsd./µl)†,Diet: Keto (vs Non-Keto),-0.016,0.029,"[-0.074, 0.042]",0.5977,0.9155,ns,219
+Serum Glucose (mg/dl),Diet: Keto (vs Non-Keto),-1.29,2.528,"[-6.273, 3.693]",0.6103,0.9155,ns,223
+White Blood Cells (Tsd./µl)†,Diet: Keto (vs Non-Keto),-0.012,0.029,"[-0.07, 0.046]",0.6814,0.9619,ns,219
+Eosinophils abs. (Tsd./µl)†,Diet: Keto (vs Non-Keto),0.009,0.063,"[-0.115, 0.134]",0.8812,0.9932,ns,217
+GOT/AST (U/l)†,Diet: Keto (vs Non-Keto),0,0.033,"[-0.065, 0.065]",0.9932,0.9932,ns,221
+GPT/ALT (U/l)†,Diet: Keto (vs Non-Keto),0.005,0.03,"[-0.054, 0.064]",0.8664,0.9932,ns,223
+Gamma-GT (U/l),Diet: Keto (vs Non-Keto),-0.074,0.547,"[-1.152, 1.004]",0.8924,0.9932,ns,222
+HDL-C (mg/dl),Diet: Keto (vs Non-Keto),-0.014,0.546,"[-1.091, 1.063]",0.9797,0.9932,ns,223
+Insulin (mIU/l)†,Diet: Keto (vs Non-Keto),0.032,0.113,"[-0.191, 0.254]",0.7782,0.9932,ns,223
+Monocytes abs. (Tsd./µl)†,Diet: Keto (vs Non-Keto),-0.001,0.037,"[-0.074, 0.073]",0.9870,0.9932,ns,219
+Insulin (mIU/l)†,"Baseline BMI (kg/m²), centered",0.026,0.01,"[0.008, 0.045]",0.0064,0.0764,ns,223
+Serum Glucose (mg/dl),"Baseline BMI (kg/m²), centered",0.606,0.204,"[0.203, 1.009]",0.0034,0.0764,ns,223
+Uric Acid (mg/dl),"Baseline BMI (kg/m²), centered",0.042,0.016,"[0.01, 0.073]",0.0098,0.0783,ns,223
+ESR (mm/h)†,"Baseline BMI (kg/m²), centered",0.017,0.007,"[0.003, 0.03]",0.0137,0.0824,ns,219
+HDL-C (mg/dl),"Baseline BMI (kg/m²), centered",-0.109,0.051,"[-0.21, -0.009]",0.0329,0.1581,ns,223
+Ferritin (µg/l)†,"Baseline BMI (kg/m²), centered",0.004,0.002,"[0, 0.007]",0.0574,0.2297,ns,223
+Triglycerides (mg/dl)†,"Baseline BMI (kg/m²), centered",0.004,0.002,"[-0.001, 0.009]",0.1133,0.3885,ns,223
+Alkaline Phosphatase (U/l),"Baseline BMI (kg/m²), centered",0.071,0.065,"[-0.058, 0.2]",0.2801,0.5603,ns,223
+CRP (mg/l)†,"Baseline BMI (kg/m²), centered",0.01,0.008,"[-0.007, 0.027]",0.2359,0.5603,ns,223
+Neutrophils abs. (Tsd./µl)†,"Baseline BMI (kg/m²), centered",0.005,0.004,"[-0.003, 0.013]",0.1881,0.5603,ns,208
+Total Cholesterol (mg/dl),"Baseline BMI (kg/m²), centered",-0.227,0.187,"[-0.595, 0.142]",0.2268,0.5603,ns,223
+White Blood Cells (Tsd./µl)†,"Baseline BMI (kg/m²), centered",0.003,0.003,"[-0.002, 0.008]",0.2572,0.5603,ns,219
+GOT/AST (U/l)†,"Baseline BMI (kg/m²), centered",-0.003,0.003,"[-0.008, 0.003]",0.3259,0.6017,ns,221
+GFR (ml/min),"Baseline BMI (kg/m²), centered",0.058,0.077,"[-0.094, 0.211]",0.4495,0.7706,ns,223
+Monocytes abs. (Tsd./µl)†,"Baseline BMI (kg/m²), centered",0.002,0.003,"[-0.004, 0.009]",0.4882,0.7811,ns,219
+Immature Granulocytes abs. (Tsd./µl)†,"Baseline BMI (kg/m²), centered",0.003,0.005,"[-0.007, 0.013]",0.5562,0.8040,ns,167
+Platelets (Tsd./µl)†,"Baseline BMI (kg/m²), centered",-0.001,0.002,"[-0.004, 0.002]",0.5695,0.8040,ns,219
+Eosinophils abs. (Tsd./µl)†,"Baseline BMI (kg/m²), centered",0.002,0.005,"[-0.009, 0.012]",0.7648,0.9661,ns,217
+LDL-C (mg/dl),"Baseline BMI (kg/m²), centered",-0.053,0.165,"[-0.378, 0.272]",0.7470,0.9661,ns,223
+Basophils abs. (Tsd./µl)†,"Baseline BMI (kg/m²), centered",0,0.004,"[-0.009, 0.009]",0.9794,0.9794,ns,213
+GPT/ALT (U/l)†,"Baseline BMI (kg/m²), centered",-0.001,0.003,"[-0.006, 0.005]",0.8202,0.9794,ns,223
+Gamma-GT (U/l),"Baseline BMI (kg/m²), centered",0.003,0.047,"[-0.089, 0.095]",0.9443,0.9794,ns,222
+Lymphocytes abs. (Tsd./µl)†,"Baseline BMI (kg/m²), centered",0,0.002,"[-0.005, 0.005]",0.9484,0.9794,ns,219
+Non-HDL Cholesterol (mg/dl),"Baseline BMI (kg/m²), centered",-0.022,0.17,"[-0.357, 0.313]",0.8978,0.9794,ns,223
+Ferritin (µg/l)†,"Refeeding duration (days), centered",-0.063,0.007,"[-0.076, -0.05]",1.90e-18,4.57e-17,☆☆☆,223
+Uric Acid (mg/dl),"Refeeding duration (days), centered",-0.395,0.054,"[-0.501, -0.289]",4.06e-12,4.87e-11,☆☆☆,223
+HDL-C (mg/dl),"Refeeding duration (days), centered",0.559,0.159,"[0.245, 0.873]",5.42e-04,0.0043,☆☆,223
+CRP (mg/l)†,"Refeeding duration (days), centered",-0.072,0.027,"[-0.126, -0.018]",0.0088,0.0422,☆,223
+Neutrophils abs. (Tsd./µl)†,"Refeeding duration (days), centered",-0.041,0.015,"[-0.071, -0.011]",0.0082,0.0422,☆,208
+GOT/AST (U/l)†,"Refeeding duration (days), centered",-0.024,0.01,"[-0.043, -0.005]",0.0134,0.0536,ns,221
+GFR (ml/min),"Refeeding duration (days), centered",0.652,0.278,"[0.104, 1.2]",0.0199,0.0597,ns,223
+Serum Glucose (mg/dl),"Refeeding duration (days), centered",1.744,0.728,"[0.309, 3.18]",0.0175,0.0597,ns,223
+Insulin (mIU/l)†,"Refeeding duration (days), centered",0.074,0.033,"[0.01, 0.138]",0.0246,0.0630,ns,223
+White Blood Cells (Tsd./µl)†,"Refeeding duration (days), centered",-0.02,0.009,"[-0.038, -0.002]",0.0262,0.0630,ns,219
+Gamma-GT (U/l),"Refeeding duration (days), centered",-0.33,0.159,"[-0.643, -0.018]",0.0385,0.0839,ns,222
+Triglycerides (mg/dl)†,"Refeeding duration (days), centered",0.016,0.008,"[-0.001, 0.032]",0.0633,0.1266,ns,223
+Platelets (Tsd./µl)†,"Refeeding duration (days), centered",-0.01,0.006,"[-0.021, 0.001]",0.0817,0.1509,ns,219
+Alkaline Phosphatase (U/l),"Refeeding duration (days), centered",-0.388,0.227,"[-0.835, 0.059]",0.0889,0.1524,ns,223
+Immature Granulocytes abs. (Tsd./µl)†,"Refeeding duration (days), centered",-0.029,0.022,"[-0.073, 0.014]",0.1819,0.2910,ns,167
+Monocytes abs. (Tsd./µl)†,"Refeeding duration (days), centered",-0.014,0.011,"[-0.037, 0.008]",0.2040,0.3060,ns,219
+GPT/ALT (U/l)†,"Refeeding duration (days), centered",-0.01,0.009,"[-0.028, 0.007]",0.2317,0.3272,ns,223
+Basophils abs. (Tsd./µl)†,"Refeeding duration (days), centered",0.018,0.017,"[-0.016, 0.052]",0.3053,0.4071,ns,213
+Non-HDL Cholesterol (mg/dl),"Refeeding duration (days), centered",-0.459,0.609,"[-1.66, 0.741]",0.4518,0.5708,ns,223
+Eosinophils abs. (Tsd./µl)†,"Refeeding duration (days), centered",-0.013,0.019,"[-0.051, 0.024]",0.4810,0.5772,ns,217
+ESR (mm/h)†,"Refeeding duration (days), centered",-0.015,0.023,"[-0.061, 0.031]",0.5286,0.5929,ns,219
+Lymphocytes abs. (Tsd./µl)†,"Refeeding duration (days), centered",-0.005,0.009,"[-0.023, 0.012]",0.5435,0.5929,ns,219
+Total Cholesterol (mg/dl),"Refeeding duration (days), centered",0.065,0.655,"[-1.226, 1.356]",0.9207,0.9607,ns,223
+LDL-C (mg/dl),"Refeeding duration (days), centered",0.018,0.592,"[-1.149, 1.185]",0.9757,0.9757,ns,223
+GFR (ml/min),"Age (years), centered",-0.181,0.043,"[-0.265, -0.097]",3.44e-05,8.25e-04,☆☆☆,223
+GOT/AST (U/l)†,"Age (years), centered",0.004,0.001,"[0.001, 0.006]",0.0090,0.1082,ns,221
+GPT/ALT (U/l)†,"Age (years), centered",0.003,0.001,"[0, 0.005]",0.0203,0.1628,ns,223
+Monocytes abs. (Tsd./µl)†,"Age (years), centered",0.003,0.002,"[0, 0.006]",0.0395,0.2369,ns,219
+Ferritin (µg/l)†,"Age (years), centered",0.002,0.001,"[0, 0.003]",0.1147,0.5004,ns,223
+HDL-C (mg/dl),"Age (years), centered",-0.034,0.022,"[-0.078, 0.01]",0.1251,0.5004,ns,223
+ESR (mm/h)†,"Age (years), centered",-0.004,0.003,"[-0.01, 0.002]",0.1857,0.5753,ns,219
+Gamma-GT (U/l),"Age (years), centered",0.026,0.022,"[-0.018, 0.071]",0.2397,0.5753,ns,222
+Lymphocytes abs. (Tsd./µl)†,"Age (years), centered",-0.002,0.001,"[-0.004, 0.001]",0.2098,0.5753,ns,219
+Triglycerides (mg/dl)†,"Age (years), centered",0.001,0.001,"[-0.001, 0.004]",0.2255,0.5753,ns,223
+Eosinophils abs. (Tsd./µl)†,"Age (years), centered",-0.003,0.003,"[-0.008, 0.002]",0.3082,0.6725,ns,217
+Insulin (mIU/l)†,"Age (years), centered",-0.004,0.005,"[-0.013, 0.005]",0.3888,0.7775,ns,223
+Alkaline Phosphatase (U/l),"Age (years), centered",-0.004,0.032,"[-0.068, 0.059]",0.8909,0.9688,ns,223
+Basophils abs. (Tsd./µl)†,"Age (years), centered",0,0.002,"[-0.004, 0.005]",0.9284,0.9688,ns,213
+CRP (mg/l)†,"Age (years), centered",-0.001,0.004,"[-0.008, 0.007]",0.8545,0.9688,ns,223
+Immature Granulocytes abs. (Tsd./µl)†,"Age (years), centered",0.001,0.003,"[-0.005, 0.006]",0.8389,0.9688,ns,167
+LDL-C (mg/dl),"Age (years), centered",0.037,0.082,"[-0.125, 0.199]",0.6505,0.9688,ns,223
+Neutrophils abs. (Tsd./µl)†,"Age (years), centered",0.001,0.002,"[-0.003, 0.004]",0.6826,0.9688,ns,208
+Non-HDL Cholesterol (mg/dl),"Age (years), centered",0.028,0.085,"[-0.14, 0.196]",0.7409,0.9688,ns,223
+Platelets (Tsd./µl)†,"Age (years), centered",0,0.001,"[-0.001, 0.002]",0.8018,0.9688,ns,219
+Serum Glucose (mg/dl),"Age (years), centered",0.06,0.105,"[-0.146, 0.266]",0.5667,0.9688,ns,223
+Uric Acid (mg/dl),"Age (years), centered",-0.003,0.008,"[-0.018, 0.012]",0.6968,0.9688,ns,223
+White Blood Cells (Tsd./µl)†,"Age (years), centered",0.001,0.001,"[-0.002, 0.003]",0.6256,0.9688,ns,219
+Total Cholesterol (mg/dl),"Age (years), centered",-0.001,0.092,"[-0.183, 0.18]",0.9873,0.9873,ns,223
+LDL-C (mg/dl),Sex: Male (vs Female),-4.351,1.814,"[-7.927, -0.774]",0.0173,0.1494,ns,223
+Non-HDL Cholesterol (mg/dl),Sex: Male (vs Female),-4.434,1.871,"[-8.121, -0.746]",0.0187,0.1494,ns,223
+Total Cholesterol (mg/dl),Sex: Male (vs Female),-5.305,2.037,"[-9.319, -1.291]",0.0098,0.1494,ns,223
+Basophils abs. (Tsd./µl)†,Sex: Male (vs Female),-0.09,0.048,"[-0.185, 0.005]",0.0640,0.2215,ns,213
+GFR (ml/min),Sex: Male (vs Female),-1.58,0.867,"[-3.288, 0.129]",0.0698,0.2215,ns,223
+GOT/AST (U/l)†,Sex: Male (vs Female),0.053,0.03,"[-0.005, 0.111]",0.0738,0.2215,ns,221
+Platelets (Tsd./µl)†,Sex: Male (vs Female),-0.033,0.017,"[-0.066, 0]",0.0531,0.2215,ns,219
+Uric Acid (mg/dl),Sex: Male (vs Female),0.401,0.202,"[0.004, 0.799]",0.0479,0.2215,ns,223
+Insulin (mIU/l)†,Sex: Male (vs Female),0.171,0.102,"[-0.03, 0.373]",0.0950,0.2534,ns,223
+CRP (mg/l)†,Sex: Male (vs Female),-0.126,0.084,"[-0.291, 0.039]",0.1342,0.3222,ns,223
+Gamma-GT (U/l),Sex: Male (vs Female),-0.691,0.488,"[-1.652, 0.271]",0.1583,0.3392,ns,222
+Lymphocytes abs. (Tsd./µl)†,Sex: Male (vs Female),-0.036,0.026,"[-0.088, 0.016]",0.1696,0.3392,ns,219
+Ferritin (µg/l)†,Sex: Male (vs Female),0.027,0.022,"[-0.016, 0.07]",0.2196,0.3765,ns,223
+GPT/ALT (U/l)†,Sex: Male (vs Female),0.033,0.027,"[-0.02, 0.086]",0.2170,0.3765,ns,223
+Monocytes abs. (Tsd./µl)†,Sex: Male (vs Female),0.034,0.034,"[-0.034, 0.101]",0.3290,0.5263,ns,219
+Alkaline Phosphatase (U/l),Sex: Male (vs Female),-0.307,0.696,"[-1.679, 1.065]",0.6598,0.7918,ns,223
+Eosinophils abs. (Tsd./µl)†,Sex: Male (vs Female),0.026,0.056,"[-0.085, 0.137]",0.6398,0.7918,ns,217
+Immature Granulocytes abs. (Tsd./µl)†,Sex: Male (vs Female),0.029,0.058,"[-0.086, 0.144]",0.6209,0.7918,ns,167
+Serum Glucose (mg/dl),Sex: Male (vs Female),1.045,2.234,"[-3.358, 5.448]",0.6404,0.7918,ns,223
+Triglycerides (mg/dl)†,Sex: Male (vs Female),-0.016,0.026,"[-0.067, 0.035]",0.5449,0.7918,ns,223
+Neutrophils abs. (Tsd./µl)†,Sex: Male (vs Female),0.014,0.042,"[-0.069, 0.096]",0.7464,0.8531,ns,208
+HDL-C (mg/dl),Sex: Male (vs Female),-0.135,0.52,"[-1.16, 0.89]",0.7950,0.8673,ns,223
+White Blood Cells (Tsd./µl)†,Sex: Male (vs Female),-0.004,0.026,"[-0.056, 0.048]",0.8917,0.9305,ns,219
+ESR (mm/h)†,Sex: Male (vs Female),0.004,0.068,"[-0.131, 0.138]",0.9568,0.9568,ns,219

@@ -1,0 +1,49 @@
+phase,variable,max_VIF,worst_pred,flag
+Fasting,Uric Acid (mg/dl),2.03,T0_c,OK
+Fasting,HDL-C (mg/dl),1.67,T0_c,OK
+Fasting,Insulin (mIU/l),1.49,BMI_c,OK
+Fasting,CRP (mg/l),1.4,BMI_c,OK
+Fasting,Ferritin (µg/l),1.36,T0_c,OK
+Fasting,Triglycerides (mg/dl),1.36,BMI_c,OK
+Fasting,ESR (mm/h),1.31,BMI_c,OK
+Fasting,Gamma-GT (U/l),1.31,BMI_c,OK
+Fasting,Alkaline Phosphatase (U/l),1.27,BMI_c,OK
+Fasting,White Blood Cells (Tsd./µl),1.27,BMI_c,OK
+Fasting,Neutrophils abs. (Tsd./µl),1.26,BMI_c,OK
+Fasting,GPT/ALT (U/l),1.25,BMI_c,OK
+Fasting,Serum Glucose (mg/dl),1.23,BMI_c,OK
+Fasting,GFR (ml/min),1.21,BMI_c,OK
+Fasting,Immature Granulocytes abs. (Tsd./µl),1.21,BMI_c,OK
+Fasting,Lymphocytes abs. (Tsd./µl),1.21,BMI_c,OK
+Fasting,Monocytes abs. (Tsd./µl),1.21,BMI_c,OK
+Fasting,Non-HDL Cholesterol (mg/dl),1.21,BMI_c,OK
+Fasting,LDL-C (mg/dl),1.2,BMI_c,OK
+Fasting,Platelets (Tsd./µl),1.2,BMI_c,OK
+Fasting,Eosinophils abs. (Tsd./µl),1.19,BMI_c,OK
+Fasting,GOT/AST (U/l),1.19,BMI_c,OK
+Fasting,Total Cholesterol (mg/dl),1.19,BMI_c,OK
+Fasting,Basophils abs. (Tsd./µl),1.18,BMI_c,OK
+Refeeding,Uric Acid (mg/dl),1.79,T1_c,OK
+Refeeding,Ferritin (µg/l),1.58,T1_c,OK
+Refeeding,HDL-C (mg/dl),1.53,T1_c,OK
+Refeeding,GFR (ml/min),1.4,T1_c,OK
+Refeeding,GPT/ALT (U/l),1.32,T1_c,OK
+Refeeding,CRP (mg/l),1.29,BMI_c,OK
+Refeeding,GOT/AST (U/l),1.29,T1_c,OK
+Refeeding,Monocytes abs. (Tsd./µl),1.28,T1_c,OK
+Refeeding,Insulin (mIU/l),1.23,T1_c,OK
+Refeeding,Gamma-GT (U/l),1.2,T1_c,OK
+Refeeding,ESR (mm/h),1.19,BMI_c,OK
+Refeeding,Serum Glucose (mg/dl),1.15,age_c,OK
+Refeeding,Alkaline Phosphatase (U/l),1.14,T1_c,OK
+Refeeding,Platelets (Tsd./µl),1.14,sex,OK
+Refeeding,Triglycerides (mg/dl),1.13,BMI_c,OK
+Refeeding,Total Cholesterol (mg/dl),1.12,T1_c,OK
+Refeeding,White Blood Cells (Tsd./µl),1.11,T1_c,OK
+Refeeding,Non-HDL Cholesterol (mg/dl),1.1,age_c,OK
+Refeeding,LDL-C (mg/dl),1.09,age_c,OK
+Refeeding,Lymphocytes abs. (Tsd./µl),1.09,sex,OK
+Refeeding,Neutrophils abs. (Tsd./µl),1.09,T1_c,OK
+Refeeding,Eosinophils abs. (Tsd./µl),1.08,age_c,OK
+Refeeding,Immature Granulocytes abs. (Tsd./µl),1.08,age_c,OK
+Refeeding,Basophils abs. (Tsd./µl),1.07,sex,OK

@@ -1,0 +1,13 @@
+variable,n,mean_delta_raw,mean_delta_correct,mean_pct_diff,flag
+GPT/ALT (U/l),263,9.935,9.458,73069896720.9,⚠ >10% change
+GOT/AST (U/l),261,11.276,11.032,27284353454.8,⚠ >10% change
+Platelets (Tsd./µl),264,-7.53,-9.99,10421607335.9,⚠ >10% change
+Total Cholesterol (mg/dl),264,-22.739,-24.666,-9956353556.1,⚠ >10% change
+Lymphocytes abs. (Tsd./µl),261,-0.274,-0.292,-6303590292.9,⚠ >10% change
+LDL-C (mg/dl),264,-16.273,-17.616,-5446708663.8,⚠ >10% change
+White Blood Cells (Tsd./µl),264,-0.462,-0.513,4536376168.2,⚠ >10% change
+Uric Acid (mg/dl),264,2.669,2.622,-3874388059.8,⚠ >10% change
+Monocytes abs. (Tsd./µl),261,-0.026,-0.031,-3556925299.1,⚠ >10% change
+CRP (mg/l),264,1.213,1.154,-408585762.5,⚠ >10% change
+Neutrophils abs. (Tsd./µl),256,-0.098,-0.118,-357848635.8,⚠ >10% change
+Triglycerides (mg/dl),264,-21.345,-22.48,-7.7,Negligible

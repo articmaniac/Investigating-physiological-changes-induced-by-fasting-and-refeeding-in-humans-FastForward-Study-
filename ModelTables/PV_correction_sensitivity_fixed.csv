@@ -1,0 +1,13 @@
+variable,n,mean_delta_raw,mean_delta_correct,pct_diff,flag
+Platelets (Tsd./µl),264,-7.53,-9.99,-32.7,⚠ >10% change
+Neutrophils abs. (Tsd./µl),256,-0.098,-0.118,-20.4,⚠ >10% change
+Monocytes abs. (Tsd./µl),261,-0.026,-0.031,-17.6,⚠ >10% change
+White Blood Cells (Tsd./µl),264,-0.462,-0.513,-10.9,⚠ >10% change
+Total Cholesterol (mg/dl),264,-22.739,-24.666,-8.5,Negligible
+LDL-C (mg/dl),264,-16.273,-17.616,-8.3,Negligible
+Lymphocytes abs. (Tsd./µl),261,-0.274,-0.292,-6.7,Negligible
+Triglycerides (mg/dl),264,-21.345,-22.48,-5.3,Negligible
+CRP (mg/l),264,1.213,1.154,-4.9,Negligible
+GPT/ALT (U/l),263,9.935,9.458,-4.8,Negligible
+GOT/AST (U/l),261,11.276,11.032,-2.2,Negligible
+Uric Acid (mg/dl),264,2.669,2.622,-1.7,Negligible

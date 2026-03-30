@@ -1,0 +1,21 @@
+phase,marker,n,max_cook,loess_max_dev,log_transformed,flag
+Fasting,LDL-C (mg/dl),259,0.1338,70.906,FALSE,⚠ Review
+Fasting,Total Cholesterol (mg/dl),259,0.1505,70.759,FALSE,⚠ Review
+Fasting,Serum Glucose (mg/dl),259,0.5368,17.93,FALSE,⚠ Review
+Fasting,Monocytes abs. (Tsd./µl),254,0.3314,0.723,TRUE,⚠ Review
+Fasting,CRP (mg/l),259,0.0903,0.697,TRUE,⚠ Review
+Fasting,Insulin (mIU/l),259,0.0625,0.472,TRUE,⚠ Review
+Fasting,Lymphocytes abs. (Tsd./µl),254,0.2713,0.343,TRUE,⚠ Review
+Fasting,GPT/ALT (U/l),258,0.1855,0.143,TRUE,OK
+Fasting,White Blood Cells (Tsd./µl),257,0.0687,0.128,TRUE,OK
+Fasting,Neutrophils abs. (Tsd./µl),249,0.0447,0.059,TRUE,OK
+Refeeding,Serum Glucose (mg/dl),223,0.6497,48.604,FALSE,⚠ Review
+Refeeding,LDL-C (mg/dl),223,0.6242,44.46,FALSE,⚠ Review
+Refeeding,Total Cholesterol (mg/dl),223,0.3407,33.758,FALSE,⚠ Review
+Refeeding,Monocytes abs. (Tsd./µl),219,0.8873,0.862,TRUE,⚠ Review
+Refeeding,CRP (mg/l),223,0.1639,0.614,TRUE,⚠ Review
+Refeeding,Insulin (mIU/l),223,0.0527,0.365,TRUE,⚠ Review
+Refeeding,White Blood Cells (Tsd./µl),219,0.1363,0.266,TRUE,OK
+Refeeding,Lymphocytes abs. (Tsd./µl),219,0.4183,0.183,TRUE,OK
+Refeeding,GPT/ALT (U/l),223,0.1087,0.098,TRUE,OK
+Refeeding,Neutrophils abs. (Tsd./µl),208,0.1016,0.095,TRUE,OK

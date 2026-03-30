@@ -1,0 +1,49 @@
+variable,n,max_cook,worst_subject,max_change_SE,conclusion,phase
+GOT/AST (U/l),256,65.158,273,0.59,Robust (max 0.59 SE change),Fasting
+GPT/ALT (U/l),258,22.2522,273,0.27,Robust (max 0.27 SE change),Fasting
+Ferritin (µg/l),259,20.3027,273,0.3,Robust (max 0.3 SE change),Fasting
+GFR (ml/min),259,14.4626,273,0.24,Robust (max 0.24 SE change),Fasting
+Serum Glucose (mg/dl),259,12.6699,273,0.21,Robust (max 0.21 SE change),Fasting
+Uric Acid (mg/dl),259,11.1695,273,0.37,Robust (max 0.37 SE change),Fasting
+Monocytes abs. (Tsd./µl),254,7.3086,273,0.16,Robust (max 0.16 SE change),Fasting
+Eosinophils abs. (Tsd./µl),252,6.5462,273,0.16,Robust (max 0.16 SE change),Fasting
+Immature Granulocytes abs. (Tsd./µl),212,4.5348,273,0.15,Robust (max 0.15 SE change),Fasting
+Alkaline Phosphatase (U/l),259,2.9851,273,0.08,Robust (max 0.08 SE change),Fasting
+CRP (mg/l),259,2.7838,273,0.14,Robust (max 0.14 SE change),Fasting
+Triglycerides (mg/dl),259,2.6813,273,0.1,Robust (max 0.1 SE change),Fasting
+Insulin (mIU/l),259,2.6535,273,0.1,Robust (max 0.1 SE change),Fasting
+Lymphocytes abs. (Tsd./µl),254,2.1136,273,0.11,Robust (max 0.11 SE change),Fasting
+White Blood Cells (Tsd./µl),257,1.6296,273,0.1,Robust (max 0.1 SE change),Fasting
+Gamma-GT (U/l),258,1.4573,172,1.14,⚠ Review (max 1.14 SE change),Fasting
+Platelets (Tsd./µl),257,1.4427,273,0.08,Robust (max 0.08 SE change),Fasting
+Total Cholesterol (mg/dl),259,1.332,273,0.09,Robust (max 0.09 SE change),Fasting
+HDL-C (mg/dl),259,1.1358,273,0.12,Robust (max 0.12 SE change),Fasting
+Non-HDL Cholesterol (mg/dl),259,0.9295,273,0.06,Robust (max 0.06 SE change),Fasting
+ESR (mm/h),253,0.3731,273,0.04,Robust (max 0.04 SE change),Fasting
+Basophils abs. (Tsd./µl),247,0.2725,273,0.03,Robust (max 0.03 SE change),Fasting
+LDL-C (mg/dl),259,0.0859,276,0.24,Robust (max 0.24 SE change),Fasting
+Neutrophils abs. (Tsd./µl),249,0.0776,181,0.55,Robust (max 0.55 SE change),Fasting
+Gamma-GT (U/l),222,1.0776,172,0.17,Robust (max 0.17 SE change),Refeeding
+Platelets (Tsd./µl),219,0.6283,159,0.9,Robust (max 0.9 SE change),Refeeding
+Monocytes abs. (Tsd./µl),219,0.3886,159,0.52,Robust (max 0.52 SE change),Refeeding
+Alkaline Phosphatase (U/l),223,0.2701,172,0.18,Robust (max 0.18 SE change),Refeeding
+LDL-C (mg/dl),223,0.2245,182,0.23,Robust (max 0.23 SE change),Refeeding
+Lymphocytes abs. (Tsd./µl),219,0.2212,159,0.35,Robust (max 0.35 SE change),Refeeding
+CRP (mg/l),223,0.2207,243,0.36,Robust (max 0.36 SE change),Refeeding
+Serum Glucose (mg/dl),223,0.2112,100,0.4,Robust (max 0.4 SE change),Refeeding
+Ferritin (µg/l),223,0.1962,194,0.66,Robust (max 0.66 SE change),Refeeding
+ESR (mm/h),219,0.1944,68,0.47,Robust (max 0.47 SE change),Refeeding
+Triglycerides (mg/dl),223,0.1909,158,0.59,Robust (max 0.59 SE change),Refeeding
+Insulin (mIU/l),223,0.1897,199,0.76,Robust (max 0.76 SE change),Refeeding
+Total Cholesterol (mg/dl),223,0.1892,146,0.22,Robust (max 0.22 SE change),Refeeding
+Eosinophils abs. (Tsd./µl),217,0.1886,159,0.43,Robust (max 0.43 SE change),Refeeding
+Non-HDL Cholesterol (mg/dl),223,0.1595,146,0.19,Robust (max 0.19 SE change),Refeeding
+Uric Acid (mg/dl),223,0.1559,85,0.43,Robust (max 0.43 SE change),Refeeding
+White Blood Cells (Tsd./µl),219,0.1447,146,0.21,Robust (max 0.21 SE change),Refeeding
+Neutrophils abs. (Tsd./µl),208,0.141,146,0.2,Robust (max 0.2 SE change),Refeeding
+Immature Granulocytes abs. (Tsd./µl),167,0.1107,250,0.51,Robust (max 0.51 SE change),Refeeding
+Basophils abs. (Tsd./µl),213,0.1065,250,0.5,Robust (max 0.5 SE change),Refeeding
+GFR (ml/min),223,0.0821,159,0.44,Robust (max 0.44 SE change),Refeeding
+GOT/AST (U/l),221,0.0752,206,0.62,Robust (max 0.62 SE change),Refeeding
+HDL-C (mg/dl),223,0.0731,96,0.54,Robust (max 0.54 SE change),Refeeding
+GPT/ALT (U/l),223,0.0706,75,0.32,Robust (max 0.32 SE change),Refeeding

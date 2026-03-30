@@ -1,0 +1,29 @@
+Index,Term,Estimate,SE,95% CI,P (raw),P (FDR),Signif.,n_subjects
+LMR,T1 × Diet (baseline dependency differs by diet),-0.246,0.103,"[-0.449, -0.043]",0.0177,0.0353,☆,219
+LMR,"End of fasting (T1), centered",0.849,0.051,"[0.748, 0.95]",4.89e-40,9.78e-40,☆☆☆,219
+LMR,Diet: Keto (vs Non-Keto),-0.493,0.206,"[-0.9, -0.086]",0.0178,0.0494,☆,219
+LMR,"Refeeding duration, centered",0.011,0.011,"[-0.01, 0.032]",0.2947,0.3293,ns,219
+LMR,"Baseline BMI, centered",-0.003,0.003,"[-0.008, 0.003]",0.3882,0.5177,ns,219
+LMR,"Age, centered",-0.004,0.001,"[-0.007, -0.001]",0.0059,0.0236,☆,219
+LMR,Sex: Male (vs Female),-0.062,0.033,"[-0.128, 0.003]",0.0607,0.2429,ns,219
+NLR,T1 × Diet (baseline dependency differs by diet),-0.272,0.108,"[-0.486, -0.058]",0.0129,0.0353,☆,208
+NLR,"End of fasting (T1), centered",0.678,0.056,"[0.566, 0.789]",2.07e-25,2.07e-25,☆☆☆,208
+NLR,Diet: Keto (vs Non-Keto),-0.649,0.287,"[-1.215, -0.084]",0.0247,0.0494,☆,208
+NLR,"Refeeding duration, centered",-0.038,0.018,"[-0.072, -0.003]",0.0338,0.0675,ns,208
+NLR,"Baseline BMI, centered",0.005,0.004,"[-0.004, 0.014]",0.2814,0.5177,ns,208
+NLR,"Age, centered",0.002,0.002,"[-0.002, 0.006]",0.3589,0.3589,ns,208
+NLR,Sex: Male (vs Female),0.053,0.049,"[-0.044, 0.149]",0.2837,0.5674,ns,208
+PLR,T1 × Diet (baseline dependency differs by diet),-0.015,0.084,"[-0.18, 0.149]",0.8548,0.8548,ns,219
+PLR,"End of fasting (T1), centered",0.849,0.037,"[0.776, 0.921]",2.61e-59,1.04e-58,☆☆☆,219
+PLR,Diet: Keto (vs Non-Keto),0.056,0.158,"[-0.255, 0.366]",0.7245,0.7245,ns,219
+PLR,"Refeeding duration, centered",-0.009,0.009,"[-0.026, 0.009]",0.3293,0.3293,ns,219
+PLR,"Baseline BMI, centered",0,0.002,"[-0.004, 0.005]",0.8787,0.8787,ns,219
+PLR,"Age, centered",0.001,0.001,"[-0.001, 0.004]",0.2453,0.3388,ns,219
+PLR,Sex: Male (vs Female),-0.007,0.026,"[-0.058, 0.043]",0.7772,0.8811,ns,219
+SII (a.u.),T1 × Diet (baseline dependency differs by diet),-0.187,0.098,"[-0.38, 0.007]",0.0585,0.0780,ns,208
+SII (a.u.),"End of fasting (T1), centered",0.725,0.051,"[0.624, 0.825]",3.40e-32,4.53e-32,☆☆☆,208
+SII (a.u.),Diet: Keto (vs Non-Keto),0.612,0.292,"[0.036, 1.188]",0.0373,0.0497,☆,208
+SII (a.u.),"Refeeding duration, centered",-0.04,0.018,"[-0.075, -0.004]",0.0300,0.0675,ns,208
+SII (a.u.),"Baseline BMI, centered",0.005,0.005,"[-0.004, 0.014]",0.2667,0.5177,ns,208
+SII (a.u.),"Age, centered",0.003,0.002,"[-0.002, 0.007]",0.2541,0.3388,ns,208
+SII (a.u.),Sex: Male (vs Female),-0.007,0.05,"[-0.106, 0.091]",0.8811,0.8811,ns,208

@@ -1,0 +1,49 @@
+variable,n_subjects,singular,converged,note,phase,flag
+Alkaline Phosphatase (U/l),275,FALSE,TRUE,OK,Fasting,OK
+Basophils abs. (Tsd./µl),275,FALSE,TRUE,OK,Fasting,OK
+CRP (mg/l),275,FALSE,TRUE,OK,Fasting,OK
+ESR (mm/h),273,FALSE,TRUE,OK,Fasting,OK
+Eosinophils abs. (Tsd./µl),275,FALSE,TRUE,OK,Fasting,OK
+Ferritin (µg/l),275,FALSE,TRUE,OK,Fasting,OK
+GFR (ml/min),275,FALSE,TRUE,OK,Fasting,OK
+GOT/AST (U/l),275,FALSE,TRUE,OK,Fasting,OK
+GPT/ALT (U/l),275,FALSE,TRUE,OK,Fasting,OK
+Gamma-GT (U/l),274,FALSE,TRUE,OK,Fasting,OK
+HDL-C (mg/dl),275,FALSE,TRUE,OK,Fasting,OK
+Immature Granulocytes abs. (Tsd./µl),268,FALSE,TRUE,OK,Fasting,OK
+Insulin (mIU/l),272,FALSE,TRUE,OK,Fasting,OK
+LDL-C (mg/dl),275,FALSE,TRUE,OK,Fasting,OK
+Lymphocytes abs. (Tsd./µl),275,FALSE,TRUE,OK,Fasting,OK
+Monocytes abs. (Tsd./µl),275,FALSE,TRUE,OK,Fasting,OK
+Neutrophils abs. (Tsd./µl),275,FALSE,TRUE,OK,Fasting,OK
+Non-HDL Cholesterol (mg/dl),275,FALSE,TRUE,OK,Fasting,OK
+Platelets (Tsd./µl),275,FALSE,TRUE,OK,Fasting,OK
+Serum Glucose (mg/dl),275,FALSE,TRUE,OK,Fasting,OK
+Total Cholesterol (mg/dl),275,FALSE,TRUE,OK,Fasting,OK
+Triglycerides (mg/dl),275,FALSE,TRUE,OK,Fasting,OK
+Uric Acid (mg/dl),275,FALSE,TRUE,OK,Fasting,OK
+White Blood Cells (Tsd./µl),275,FALSE,TRUE,OK,Fasting,OK
+Alkaline Phosphatase (U/l),266,FALSE,TRUE,OK,Refeeding,OK
+Basophils abs. (Tsd./µl),265,FALSE,TRUE,OK,Refeeding,OK
+CRP (mg/l),266,FALSE,TRUE,OK,Refeeding,OK
+ESR (mm/h),265,FALSE,TRUE,OK,Refeeding,OK
+Eosinophils abs. (Tsd./µl),265,FALSE,TRUE,OK,Refeeding,OK
+Ferritin (µg/l),266,FALSE,TRUE,OK,Refeeding,OK
+GFR (ml/min),266,FALSE,TRUE,OK,Refeeding,OK
+GOT/AST (U/l),266,FALSE,TRUE,OK,Refeeding,OK
+GPT/ALT (U/l),266,FALSE,TRUE,OK,Refeeding,OK
+Gamma-GT (U/l),265,FALSE,TRUE,OK,Refeeding,OK
+HDL-C (mg/dl),266,FALSE,TRUE,OK,Refeeding,OK
+Immature Granulocytes abs. (Tsd./µl),252,FALSE,TRUE,OK,Refeeding,OK
+Insulin (mIU/l),266,FALSE,TRUE,OK,Refeeding,OK
+LDL-C (mg/dl),266,FALSE,TRUE,OK,Refeeding,OK
+Lymphocytes abs. (Tsd./µl),265,FALSE,TRUE,OK,Refeeding,OK
+Monocytes abs. (Tsd./µl),265,FALSE,TRUE,OK,Refeeding,OK
+Neutrophils abs. (Tsd./µl),263,FALSE,TRUE,OK,Refeeding,OK
+Non-HDL Cholesterol (mg/dl),266,FALSE,TRUE,OK,Refeeding,OK
+Platelets (Tsd./µl),265,FALSE,TRUE,OK,Refeeding,OK
+Serum Glucose (mg/dl),266,FALSE,TRUE,OK,Refeeding,OK
+Total Cholesterol (mg/dl),266,FALSE,TRUE,OK,Refeeding,OK
+Triglycerides (mg/dl),266,FALSE,TRUE,OK,Refeeding,OK
+Uric Acid (mg/dl),266,FALSE,TRUE,OK,Refeeding,OK
+White Blood Cells (Tsd./µl),265,FALSE,TRUE,OK,Refeeding,OK

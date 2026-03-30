@@ -1,0 +1,10 @@
+"Baseline CRP group","BMI category","n","Mean T0 CRP","Mean T1 CRP","Mean Δ CRP","Mean % change"
+"Low (<1 mg/L)","Normal",64,0.42,0.96,0.55,148.4
+"Low (<1 mg/L)","Overweight",47,0.45,1.25,0.8,216.2
+"Low (<1 mg/L)","Obese",27,0.64,2.69,2.05,407.9
+"Moderate (1–10 mg/L)","Normal",17,3.18,4.29,1.11,66.1
+"Moderate (1–10 mg/L)","Overweight",57,2.68,4.79,2.11,117.1
+"Moderate (1–10 mg/L)","Obese",45,3.92,5.77,1.85,93
+"Elevated (>10 mg/L)","Normal",1,29.1,11,-18.1,-62.2
+"Elevated (>10 mg/L)","Overweight",1,26.8,5.4,-21.4,-79.9
+"Elevated (>10 mg/L)","Obese",2,18.2,23.2,5,29.3

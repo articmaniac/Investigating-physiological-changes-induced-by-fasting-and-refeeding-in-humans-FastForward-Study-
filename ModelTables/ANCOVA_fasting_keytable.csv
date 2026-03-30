@@ -1,0 +1,109 @@
+Phase,Outcome,Predictor,Term,Estimate,95% CI,P (raw),P (FDR),n_subjects,n_obs
+fasting_T0T1,CRP (mg/l),AIP_T0,"AIP (T0), z",-0.14,"[-0.277, -0.003]",0.04500,0.18118,261,261
+fasting_T0T1,CRP (mg/l),AIP_T0,Age,-0.002,"[-0.005, 0.001]",0.14050,0.31413,261,261
+fasting_T0T1,CRP (mg/l),AIP_T0,BMI (baseline),0.061,"[0.036, 0.087]",4.4e-06,2.0e-05,261,261
+fasting_T0T1,CRP (mg/l),AIP_T0,Baseline outcome (T0),0.641,"[0.542, 0.74]",4.6e-29,1.7e-28,261,261
+fasting_T0T1,CRP (mg/l),AIP_T0,Fasting duration,-0.04,"[-0.066, -0.013]",0.00339,0.00577,261,261
+fasting_T0T1,CRP (mg/l),AIP_T0,Sex: Male,-0.037,"[-0.286, 0.212]",0.76996,0.95853,261,261
+fasting_T0T1,CRP (mg/l),TyG_T0,Age,-0.002,"[-0.005, 0.001]",0.19716,0.31413,261,261
+fasting_T0T1,CRP (mg/l),TyG_T0,BMI (baseline),0.058,"[0.032, 0.083]",1.1e-05,3.2e-05,261,261
+fasting_T0T1,CRP (mg/l),TyG_T0,Baseline outcome (T0),0.638,"[0.539, 0.738]",1.1e-28,2.7e-28,261,261
+fasting_T0T1,CRP (mg/l),TyG_T0,Fasting duration,-0.039,"[-0.066, -0.012]",0.00429,0.00643,261,261
+fasting_T0T1,CRP (mg/l),TyG_T0,Sex: Male,-0.098,"[-0.332, 0.137]",0.41161,0.77823,261,261
+fasting_T0T1,CRP (mg/l),TyG_T0,"TyG (T0), z",-0.095,"[-0.22, 0.029]",0.13150,0.26300,261,261
+fasting_T0T1,CRP (mg/l),logHOMA_T0,Age,-0.002,"[-0.005, 0.001]",0.26497,0.31796,261,261
+fasting_T0T1,CRP (mg/l),logHOMA_T0,BMI (baseline),0.064,"[0.038, 0.089]",1.9e-06,1.1e-05,261,261
+fasting_T0T1,CRP (mg/l),logHOMA_T0,Baseline outcome (T0),0.651,"[0.552, 0.751]",1.6e-29,7.1e-29,261,261
+fasting_T0T1,CRP (mg/l),logHOMA_T0,Fasting duration,-0.04,"[-0.066, -0.013]",0.00321,0.00577,261,261
+fasting_T0T1,CRP (mg/l),logHOMA_T0,Sex: Male,-0.107,"[-0.333, 0.118]",0.34947,0.77823,261,261
+fasting_T0T1,CRP (mg/l),logHOMA_T0,"log(HOMA-IR) (T0), z",-0.156,"[-0.28, -0.032]",0.01377,0.08261,261,261
+fasting_T0T1,ESR (mm/h),AIP_T0,"AIP (T0), z",-0.013,"[-0.107, 0.082]",0.79314,0.95177,255,255
+fasting_T0T1,ESR (mm/h),AIP_T0,Age,-0.002,"[-0.004, 0]",0.07294,0.30370,255,255
+fasting_T0T1,ESR (mm/h),AIP_T0,BMI (baseline),0.041,"[0.024, 0.059]",6.0e-06,2.1e-05,255,255
+fasting_T0T1,ESR (mm/h),AIP_T0,Baseline outcome (T0),0.53,"[0.443, 0.617]",1.7e-26,2.6e-26,255,255
+fasting_T0T1,ESR (mm/h),AIP_T0,Fasting duration,-0.04,"[-0.058, -0.022]",2.3e-05,0.00019,255,255
+fasting_T0T1,ESR (mm/h),AIP_T0,Sex: Male,0.151,"[-0.025, 0.328]",0.09242,0.33270,255,255
+fasting_T0T1,ESR (mm/h),TyG_T0,Age,-0.002,"[-0.004, 0]",0.07736,0.30370,255,255
+fasting_T0T1,ESR (mm/h),TyG_T0,BMI (baseline),0.042,"[0.025, 0.059]",1.7e-06,1.1e-05,255,255
+fasting_T0T1,ESR (mm/h),TyG_T0,Baseline outcome (T0),0.533,"[0.446, 0.62]",1.4e-26,2.3e-26,255,255
+fasting_T0T1,ESR (mm/h),TyG_T0,Fasting duration,-0.039,"[-0.058, -0.021]",3.2e-05,0.00019,255,255
+fasting_T0T1,ESR (mm/h),TyG_T0,Sex: Male,0.159,"[-0.007, 0.325]",0.06039,0.29052,255,255
+fasting_T0T1,ESR (mm/h),TyG_T0,"TyG (T0), z",-0.032,"[-0.117, 0.054]",0.46378,0.64821,255,255
+fasting_T0T1,ESR (mm/h),logHOMA_T0,Age,-0.002,"[-0.004, 0]",0.10123,0.30370,255,255
+fasting_T0T1,ESR (mm/h),logHOMA_T0,BMI (baseline),0.046,"[0.028, 0.063]",4.9e-07,8.9e-06,255,255
+fasting_T0T1,ESR (mm/h),logHOMA_T0,Baseline outcome (T0),0.538,"[0.451, 0.625]",5.1e-27,9.1e-27,255,255
+fasting_T0T1,ESR (mm/h),logHOMA_T0,Fasting duration,-0.039,"[-0.058, -0.021]",2.9e-05,0.00019,255,255
+fasting_T0T1,ESR (mm/h),logHOMA_T0,Sex: Male,0.162,"[0.002, 0.323]",0.04775,0.29052,255,255
+fasting_T0T1,ESR (mm/h),logHOMA_T0,"log(HOMA-IR) (T0), z",-0.066,"[-0.151, 0.019]",0.12558,0.25116,255,255
+fasting_T0T1,Ferritin (µg/l),AIP_T0,"AIP (T0), z",0.046,"[-0.002, 0.093]",0.06039,0.18118,261,261
+fasting_T0T1,Ferritin (µg/l),AIP_T0,Age,0,"[-0.001, 0.001]",0.47280,0.53190,261,261
+fasting_T0T1,Ferritin (µg/l),AIP_T0,BMI (baseline),-0.001,"[-0.009, 0.008]",0.89867,0.95153,261,261
+fasting_T0T1,Ferritin (µg/l),AIP_T0,Baseline outcome (T0),0.774,"[0.722, 0.825]",2.2e-84,2.0e-83,261,261
+fasting_T0T1,Ferritin (µg/l),AIP_T0,Fasting duration,0.008,"[-0.001, 0.017]",0.08381,0.10775,261,261
+fasting_T0T1,Ferritin (µg/l),AIP_T0,Sex: Male,0.065,"[-0.026, 0.157]",0.16022,0.48065,261,261
+fasting_T0T1,Ferritin (µg/l),TyG_T0,Age,0,"[-0.001, 0.001]",0.58525,0.61968,261,261
+fasting_T0T1,Ferritin (µg/l),TyG_T0,BMI (baseline),0,"[-0.008, 0.008]",0.97657,0.97657,261,261
+fasting_T0T1,Ferritin (µg/l),TyG_T0,Baseline outcome (T0),0.771,"[0.719, 0.823]",4.5e-83,2.7e-82,261,261
+fasting_T0T1,Ferritin (µg/l),TyG_T0,Fasting duration,0.008,"[-0.002, 0.017]",0.10677,0.12812,261,261
+fasting_T0T1,Ferritin (µg/l),TyG_T0,Sex: Male,0.082,"[-0.005, 0.169]",0.06456,0.29052,261,261
+fasting_T0T1,Ferritin (µg/l),TyG_T0,"TyG (T0), z",0.041,"[-0.003, 0.084]",0.06528,0.20305,261,261
+fasting_T0T1,Ferritin (µg/l),logHOMA_T0,Age,0,"[-0.001, 0.001]",0.69879,0.69879,261,261
+fasting_T0T1,Ferritin (µg/l),logHOMA_T0,BMI (baseline),-0.001,"[-0.009, 0.008]",0.87256,0.95153,261,261
+fasting_T0T1,Ferritin (µg/l),logHOMA_T0,Baseline outcome (T0),0.778,"[0.727, 0.829]",1.5e-85,2.7e-84,261,261
+fasting_T0T1,Ferritin (µg/l),logHOMA_T0,Fasting duration,0.008,"[-0.001, 0.017]",0.07819,0.10775,261,261
+fasting_T0T1,Ferritin (µg/l),logHOMA_T0,Sex: Male,0.089,"[0.003, 0.175]",0.04359,0.29052,261,261
+fasting_T0T1,Ferritin (µg/l),logHOMA_T0,"log(HOMA-IR) (T0), z",0.039,"[-0.003, 0.082]",0.07166,0.21498,261,261
+fasting_T0T1,Monocytes abs. (Tsd./µl),AIP_T0,"AIP (T0), z",0.013,"[-0.006, 0.032]",0.17598,0.35197,256,256
+fasting_T0T1,Monocytes abs. (Tsd./µl),AIP_T0,Age,0,"[0, 0.001]",0.16504,0.31413,256,256
+fasting_T0T1,Monocytes abs. (Tsd./µl),AIP_T0,BMI (baseline),0.006,"[0.003, 0.009]",0.00070,0.00140,256,256
+fasting_T0T1,Monocytes abs. (Tsd./µl),AIP_T0,Baseline outcome (T0),0.51,"[0.43, 0.59]",1.9e-28,4.3e-28,256,256
+fasting_T0T1,Monocytes abs. (Tsd./µl),AIP_T0,Fasting duration,-0.002,"[-0.006, 0.002]",0.26129,0.27480,256,256
+fasting_T0T1,Monocytes abs. (Tsd./µl),AIP_T0,Sex: Male,-0.002,"[-0.037, 0.032]",0.90209,0.95853,256,256
+fasting_T0T1,Monocytes abs. (Tsd./µl),TyG_T0,Age,0,"[0, 0.001]",0.20968,0.31413,256,256
+fasting_T0T1,Monocytes abs. (Tsd./µl),TyG_T0,BMI (baseline),0.006,"[0.002, 0.009]",0.00059,0.00133,256,256
+fasting_T0T1,Monocytes abs. (Tsd./µl),TyG_T0,Baseline outcome (T0),0.511,"[0.432, 0.59]",9.6e-29,2.7e-28,256,256
+fasting_T0T1,Monocytes abs. (Tsd./µl),TyG_T0,Fasting duration,-0.002,"[-0.006, 0.001]",0.21220,0.23873,256,256
+fasting_T0T1,Monocytes abs. (Tsd./µl),TyG_T0,Sex: Male,-0,"[-0.033, 0.032]",0.99185,0.99185,256,256
+fasting_T0T1,Monocytes abs. (Tsd./µl),TyG_T0,"TyG (T0), z",0.016,"[-0.001, 0.033]",0.06768,0.20305,256,256
+fasting_T0T1,Monocytes abs. (Tsd./µl),logHOMA_T0,Age,0,"[0, 0.001]",0.22492,0.31413,256,256
+fasting_T0T1,Monocytes abs. (Tsd./µl),logHOMA_T0,BMI (baseline),0.006,"[0.003, 0.01]",0.00037,0.00096,256,256
+fasting_T0T1,Monocytes abs. (Tsd./µl),logHOMA_T0,Baseline outcome (T0),0.51,"[0.429, 0.591]",5.3e-28,1.1e-27,256,256
+fasting_T0T1,Monocytes abs. (Tsd./µl),logHOMA_T0,Fasting duration,-0.002,"[-0.006, 0.002]",0.27480,0.27480,256,256
+fasting_T0T1,Monocytes abs. (Tsd./µl),logHOMA_T0,Sex: Male,0.006,"[-0.026, 0.038]",0.71334,0.95853,256,256
+fasting_T0T1,Monocytes abs. (Tsd./µl),logHOMA_T0,"log(HOMA-IR) (T0), z",0.008,"[-0.009, 0.025]",0.38250,0.38250,256,256
+fasting_T0T1,Neutrophils abs. (Tsd./µl),AIP_T0,"AIP (T0), z",-0.002,"[-0.185, 0.18]",0.97946,0.97946,251,251
+fasting_T0T1,Neutrophils abs. (Tsd./µl),AIP_T0,Age,0.002,"[-0.002, 0.006]",0.24349,0.31413,251,251
+fasting_T0T1,Neutrophils abs. (Tsd./µl),AIP_T0,BMI (baseline),0.03,"[-0.002, 0.063]",0.06478,0.08329,251,251
+fasting_T0T1,Neutrophils abs. (Tsd./µl),AIP_T0,Baseline outcome (T0),0.614,"[0.475, 0.754]",6.8e-16,7.1e-16,251,251
+fasting_T0T1,Neutrophils abs. (Tsd./µl),AIP_T0,Fasting duration,-0.055,"[-0.09, -0.02]",0.00204,0.00577,251,251
+fasting_T0T1,Neutrophils abs. (Tsd./µl),AIP_T0,Sex: Male,-0.042,"[-0.369, 0.286]",0.80267,0.95853,251,251
+fasting_T0T1,Neutrophils abs. (Tsd./µl),TyG_T0,Age,0.002,"[-0.002, 0.006]",0.24432,0.31413,251,251
+fasting_T0T1,Neutrophils abs. (Tsd./µl),TyG_T0,BMI (baseline),0.029,"[-0.003, 0.06]",0.07396,0.08875,251,251
+fasting_T0T1,Neutrophils abs. (Tsd./µl),TyG_T0,Baseline outcome (T0),0.609,"[0.47, 0.749]",9.1e-16,9.1e-16,251,251
+fasting_T0T1,Neutrophils abs. (Tsd./µl),TyG_T0,Fasting duration,-0.056,"[-0.091, -0.021]",0.00189,0.00577,251,251
+fasting_T0T1,Neutrophils abs. (Tsd./µl),TyG_T0,Sex: Male,-0.058,"[-0.364, 0.249]",0.71170,0.95853,251,251
+fasting_T0T1,Neutrophils abs. (Tsd./µl),TyG_T0,"TyG (T0), z",0.027,"[-0.136, 0.191]",0.74052,0.74052,251,251
+fasting_T0T1,Neutrophils abs. (Tsd./µl),logHOMA_T0,Age,0.003,"[-0.001, 0.006]",0.20038,0.31413,251,251
+fasting_T0T1,Neutrophils abs. (Tsd./µl),logHOMA_T0,BMI (baseline),0.038,"[0.006, 0.07]",0.02080,0.03404,251,251
+fasting_T0T1,Neutrophils abs. (Tsd./µl),logHOMA_T0,Baseline outcome (T0),0.638,"[0.496, 0.779]",1.6e-16,1.7e-16,251,251
+fasting_T0T1,Neutrophils abs. (Tsd./µl),logHOMA_T0,Fasting duration,-0.054,"[-0.089, -0.019]",0.00252,0.00577,251,251
+fasting_T0T1,Neutrophils abs. (Tsd./µl),logHOMA_T0,Sex: Male,-0.018,"[-0.314, 0.279]",0.90528,0.95853,251,251
+fasting_T0T1,Neutrophils abs. (Tsd./µl),logHOMA_T0,"log(HOMA-IR) (T0), z",-0.105,"[-0.27, 0.061]",0.21422,0.32133,251,251
+fasting_T0T1,White Blood Cells (Tsd./µl),AIP_T0,"AIP (T0), z",0.059,"[-0.14, 0.259]",0.55669,0.83504,259,259
+fasting_T0T1,White Blood Cells (Tsd./µl),AIP_T0,Age,0.004,"[-0.001, 0.008]",0.08920,0.30370,259,259
+fasting_T0T1,White Blood Cells (Tsd./µl),AIP_T0,BMI (baseline),0.037,"[0.002, 0.072]",0.03814,0.05280,259,259
+fasting_T0T1,White Blood Cells (Tsd./µl),AIP_T0,Baseline outcome (T0),0.626,"[0.512, 0.74]",1.3e-22,1.6e-22,259,259
+fasting_T0T1,White Blood Cells (Tsd./µl),AIP_T0,Fasting duration,-0.057,"[-0.095, -0.02]",0.00274,0.00577,259,259
+fasting_T0T1,White Blood Cells (Tsd./µl),AIP_T0,Sex: Male,-0.15,"[-0.503, 0.203]",0.40460,0.77823,259,259
+fasting_T0T1,White Blood Cells (Tsd./µl),TyG_T0,Age,0.004,"[-0.001, 0.008]",0.09961,0.30370,259,259
+fasting_T0T1,White Blood Cells (Tsd./µl),TyG_T0,BMI (baseline),0.038,"[0.004, 0.072]",0.03036,0.04554,259,259
+fasting_T0T1,White Blood Cells (Tsd./µl),TyG_T0,Baseline outcome (T0),0.626,"[0.512, 0.74]",1.1e-22,1.4e-22,259,259
+fasting_T0T1,White Blood Cells (Tsd./µl),TyG_T0,Fasting duration,-0.058,"[-0.096, -0.021]",0.00255,0.00577,259,259
+fasting_T0T1,White Blood Cells (Tsd./µl),TyG_T0,Sex: Male,-0.132,"[-0.463, 0.199]",0.43235,0.77823,259,259
+fasting_T0T1,White Blood Cells (Tsd./µl),TyG_T0,"TyG (T0), z",0.056,"[-0.123, 0.234]",0.54017,0.64821,259,259
+fasting_T0T1,White Blood Cells (Tsd./µl),logHOMA_T0,Age,0.004,"[0, 0.008]",0.07954,0.30370,259,259
+fasting_T0T1,White Blood Cells (Tsd./µl),logHOMA_T0,BMI (baseline),0.048,"[0.013, 0.083]",0.00767,0.01381,259,259
+fasting_T0T1,White Blood Cells (Tsd./µl),logHOMA_T0,Baseline outcome (T0),0.649,"[0.534, 0.764]",1.5e-23,2.0e-23,259,259
+fasting_T0T1,White Blood Cells (Tsd./µl),logHOMA_T0,Fasting duration,-0.056,"[-0.093, -0.019]",0.00353,0.00577,259,259
+fasting_T0T1,White Blood Cells (Tsd./µl),logHOMA_T0,Sex: Male,-0.082,"[-0.403, 0.24]",0.61599,0.95853,259,259
+fasting_T0T1,White Blood Cells (Tsd./µl),logHOMA_T0,"log(HOMA-IR) (T0), z",-0.089,"[-0.268, 0.091]",0.33124,0.38250,259,259
